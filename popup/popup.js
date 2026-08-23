@@ -39,13 +39,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const exportModeSelect = document.getElementById('export-mode-select');
   const btnMainExport = document.getElementById('btn-main-export');
 
-  // Settings & History Modal Elements
-  const settingsModal = document.getElementById('settings-modal');
-  const btnCloseSettings = document.getElementById('btn-close-settings');
+  // Dedicated Views & Settings Page Elements
+  const viewHome = document.getElementById('view-home');
+  const viewSettings = document.getElementById('view-settings');
+  const btnReturnHome = document.getElementById('btn-return-home');
+  const btnReturnHomeFooter = document.getElementById('btn-return-home-footer');
   const btnSaveSettings = document.getElementById('btn-save-settings');
-  const modalTabBtns = document.querySelectorAll('.modal-tab-btn');
-  const modalTabPrefs = document.getElementById('modal-tab-prefs');
-  const modalTabHistory = document.getElementById('modal-tab-history');
+
+  const settingsSubtabBtns = document.querySelectorAll('.settings-subtab-btn');
+  const panelSettingsPrefs = document.getElementById('panel-settings-prefs');
+  const panelSettingsColumns = document.getElementById('panel-settings-columns');
+  const panelSettingsHistory = document.getElementById('panel-settings-history');
+
+  const btnColumnsSelectAll = document.getElementById('btn-columns-select-all');
+  const btnColumnsDeselectAll = document.getElementById('btn-columns-deselect-all');
 
   const settingTheme = document.getElementById('setting-theme');
   const settingDelimiter = document.getElementById('setting-delimiter');
@@ -886,33 +893,64 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Export trigger
     btnMainExport.addEventListener('click', () => performExport());
 
-    // Settings Modal with gear rotation animation
+    // Dedicated Page View Switcher
+    function switchToView(viewName) {
+      if (viewName === 'settings') {
+        viewHome.classList.add('hidden');
+        viewSettings.classList.remove('hidden');
+        renderExportHistory();
+      } else {
+        viewSettings.classList.add('hidden');
+        viewHome.classList.remove('hidden');
+        renderCurrentView();
+      }
+    }
+
+    // Open Settings Page
     btnSettings.addEventListener('click', () => {
       triggerAnimation(btnSettings, 'anim-gear-spin', 600);
-      settingsModal.classList.remove('hidden');
-      renderExportHistory();
+      switchToView('settings');
     });
 
-    btnCloseSettings.addEventListener('click', () => {
-      settingsModal.classList.add('hidden');
-    });
+    // Return to Home Buttons
+    if (btnReturnHome) {
+      btnReturnHome.addEventListener('click', () => switchToView('home'));
+    }
+    if (btnReturnHomeFooter) {
+      btnReturnHomeFooter.addEventListener('click', () => switchToView('home'));
+    }
 
-    // Modal Tabs
-    modalTabBtns.forEach(btn => {
+    // Settings Sub-Navigation Tabs
+    settingsSubtabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        modalTabBtns.forEach(b => b.classList.remove('active'));
+        settingsSubtabBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const tab = btn.getAttribute('data-modal-tab');
-        if (tab === 'history') {
-          modalTabPrefs.classList.add('hidden');
-          modalTabHistory.classList.remove('hidden');
-          renderExportHistory();
-        } else {
-          modalTabPrefs.classList.remove('hidden');
-          modalTabHistory.classList.add('hidden');
-        }
+        const tab = btn.getAttribute('data-settings-tab');
+
+        panelSettingsPrefs.classList.toggle('hidden', tab !== 'prefs');
+        panelSettingsColumns.classList.toggle('hidden', tab !== 'columns');
+        panelSettingsHistory.classList.toggle('hidden', tab !== 'history');
+
+        if (tab === 'history') renderExportHistory();
       });
     });
+
+    // Custom Columns: Select All & Deselect All
+    if (btnColumnsSelectAll && columnsGrid) {
+      btnColumnsSelectAll.addEventListener('click', () => {
+        columnsGrid.querySelectorAll('input[data-col]').forEach(chk => { chk.checked = true; });
+        showToast('All columns selected');
+      });
+    }
+
+    if (btnColumnsDeselectAll && columnsGrid) {
+      btnColumnsDeselectAll.addEventListener('click', () => {
+        columnsGrid.querySelectorAll('input[data-col]').forEach(chk => {
+          chk.checked = chk.getAttribute('data-col') === 'phone'; // keep at least phone
+        });
+        showToast('Columns deselected');
+      });
+    }
 
     // Clear History
     if (btnClearHistory) {
@@ -923,7 +961,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // Save Settings
+    // Save Settings & Return to Home
     btnSaveSettings.addEventListener('click', async () => {
       const selectedColumns = {};
       if (columnsGrid) {
@@ -944,20 +982,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         applyTheme(userSettings.theme || 'auto');
         isMasked = Boolean(userSettings.maskNumbers);
       }
-      settingsModal.classList.add('hidden');
-      showToast('Preferences saved');
-      renderCurrentView();
+      switchToView('home');
+      showToast('🎉 Preferences saved successfully!');
     });
 
     // Keyboard navigation shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        settingsModal.classList.add('hidden');
-        if (searchInput.value) {
+        if (!viewSettings.classList.contains('hidden')) {
+          switchToView('home');
+        } else if (searchInput.value) {
           searchInput.value = '';
           renderCurrentView();
         }
-      } else if (e.key === 'Enter' && !settingsModal.classList.contains('hidden')) {
+      } else if (e.key === 'Enter' && !viewSettings.classList.contains('hidden')) {
         btnSaveSettings.click();
       }
     });

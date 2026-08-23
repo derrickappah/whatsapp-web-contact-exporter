@@ -8,228 +8,267 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="brand">
-        <div class="logo-circle">
-          <img src="../icons/logo.svg" alt="WhatsApp" class="logo-icon-img">
-        </div>
-        <div class="title-group">
-          <div class="title-row">
-            <h1>WA Exporter Pro</h1>
-            <span class="version-tag">v2.1</span>
+    
+    <!-- ================= VIEW 1: HOME DASHBOARD ================= -->
+    <div class="page-view" id="view-home">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="brand">
+          <div class="logo-circle">
+            <img src="../icons/logo.svg" alt="WhatsApp" class="logo-icon-img">
           </div>
-          <div class="status-badge" id="status-indicator">
-            <span class="status-dot dot-offline"></span>
-            <span id="status-text">Connecting to WhatsApp...</span>
+          <div class="title-group">
+            <div class="title-row">
+              <h1>WA Exporter Pro</h1>
+              <span class="version-tag">v2.1</span>
+            </div>
+            <div class="status-badge" id="status-indicator">
+              <span class="status-dot dot-offline"></span>
+              <span id="status-text">Connecting to WhatsApp...</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="header-actions">
-        <button class="btn-icon" id="btn-theme-toggle" title="Toggle Light / Dark Theme">
-          <svg viewBox="0 0 24 24" id="theme-icon"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
-        </button>
-        <button class="btn-icon" id="btn-mask" title="Toggle Privacy Number Masking">
-          <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-        </button>
-        <button class="btn-icon" id="btn-copy-all" title="Copy Selected Numbers to Clipboard">
-          <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-        </button>
-        <button class="btn-icon" id="btn-settings" title="Export Preferences & History">
-          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-        </button>
-        <button class="btn-icon" id="btn-refresh" title="Refresh Data">
-          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-        </button>
-      </div>
-    </header>
+        <div class="header-actions">
+          <button class="btn-icon" id="btn-theme-toggle" title="Toggle Light / Dark Theme">
+            <svg viewBox="0 0 24 24" id="theme-icon"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+          </button>
+          <button class="btn-icon" id="btn-mask" title="Toggle Privacy Number Masking">
+            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          </button>
+          <button class="btn-icon" id="btn-copy-all" title="Copy Selected Numbers to Clipboard">
+            <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+          </button>
+          <button class="btn-icon" id="btn-settings" title="Settings, Columns & History">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          </button>
+          <button class="btn-icon" id="btn-refresh" title="Refresh Data">
+            <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          </button>
+        </div>
+      </header>
 
-    <!-- Banner -->
-    <div class="banner-notice hidden" id="banner-not-connected">
-      <p>Please open or refresh <a href="https://web.whatsapp.com" target="_blank">web.whatsapp.com</a> to start exporting.</p>
-    </div>
+      <!-- Banner -->
+      <div class="banner-notice hidden" id="banner-not-connected">
+        <p>Please open or refresh <a href="https://web.whatsapp.com" target="_blank">web.whatsapp.com</a> to start exporting.</p>
+      </div>
 
-    <!-- Quick Stats Cards -->
-    <div class="stats-row">
-      <div class="stat-card" data-tab="all">
-        <span class="stat-num" id="stat-total">0</span>
-        <span class="stat-title">Total Contacts</span>
+      <!-- Quick Stats Cards -->
+      <div class="stats-row">
+        <div class="stat-card" data-tab="all">
+          <span class="stat-num" id="stat-total">0</span>
+          <span class="stat-title">Total Contacts</span>
+        </div>
+        <div class="stat-card" data-tab="unsaved">
+          <span class="stat-num text-accent" id="stat-unsaved">0</span>
+          <span class="stat-title">Unsaved Leads</span>
+        </div>
+        <div class="stat-card" data-tab="groups">
+          <span class="stat-num" id="stat-groups">0</span>
+          <span class="stat-title">Groups</span>
+        </div>
+        <div class="stat-card" data-tab="countries">
+          <span class="stat-num" id="stat-countries">0</span>
+          <span class="stat-title">Countries</span>
+        </div>
       </div>
-      <div class="stat-card" data-tab="unsaved">
-        <span class="stat-num text-accent" id="stat-unsaved">0</span>
-        <span class="stat-title">Unsaved Leads</span>
-      </div>
-      <div class="stat-card" data-tab="groups">
-        <span class="stat-num" id="stat-groups">0</span>
-        <span class="stat-title">Groups</span>
-      </div>
-      <div class="stat-card" data-tab="countries">
-        <span class="stat-num" id="stat-countries">0</span>
-        <span class="stat-title">Countries</span>
-      </div>
-    </div>
 
-    <!-- Navigation Tabs -->
-    <nav class="nav-tabs">
-      <button class="tab-btn active" data-tab="all">All Contacts</button>
-      <button class="tab-btn" data-tab="unsaved">Unsaved Leads</button>
-      <button class="tab-btn" data-tab="groups">Group Chats</button>
-      <button class="tab-btn" data-tab="countries">Countries</button>
-      <button class="tab-btn" data-tab="labels">Labels</button>
-    </nav>
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="tab-btn active" data-tab="all">All Contacts</button>
+        <button class="tab-btn" data-tab="unsaved">Unsaved Leads</button>
+        <button class="tab-btn" data-tab="groups">Group Chats</button>
+        <button class="tab-btn" data-tab="countries">Countries</button>
+        <button class="tab-btn" data-tab="labels">Labels</button>
+      </nav>
 
-    <!-- Search & Filter Controls -->
-    <div class="controls-bar">
-      <div class="search-wrapper">
-        <svg viewBox="0 0 24 24" class="search-icon"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        <input type="text" id="search-input" placeholder="Search name, phone, country, group...">
+      <!-- Search & Filter Controls -->
+      <div class="controls-bar">
+        <div class="search-wrapper">
+          <svg viewBox="0 0 24 24" class="search-icon"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input type="text" id="search-input" placeholder="Search name, phone, country, group...">
+        </div>
+        <div class="selection-actions">
+          <label class="select-all-label">
+            <input type="checkbox" id="chk-select-all" checked>
+            <span id="selection-summary">All selected</span>
+          </label>
+        </div>
       </div>
-      <div class="selection-actions">
-        <label class="select-all-label">
-          <input type="checkbox" id="chk-select-all" checked>
-          <span id="selection-summary">All selected</span>
-        </label>
-      </div>
-    </div>
 
-    <!-- Secondary Filter Bar -->
-    <div class="secondary-filters" id="secondary-filters">
-      <select id="filter-country-select" class="filter-dropdown">
-        <option value="">All Countries (All)</option>
-      </select>
-      <select id="filter-type-select" class="filter-dropdown">
-        <option value="all">All Types</option>
-        <option value="saved">Saved Only</option>
-        <option value="unsaved">Unsaved Only</option>
-        <option value="business">Business Accounts</option>
-      </select>
-      <button class="btn-text-small" id="btn-reset-filters">Reset</button>
-    </div>
-
-    <!-- Main List Preview Container -->
-    <main class="list-container" id="list-container">
-      <div class="loading-state" id="loading-spinner">
-        <div class="spinner"></div>
-        <p>Reading WhatsApp data...</p>
-      </div>
-      <div class="items-list hidden" id="items-list">
-        <!-- Rendered items -->
-      </div>
-      <div class="empty-state hidden" id="empty-state">
-        <p>No matching contacts found.</p>
-      </div>
-    </main>
-
-    <!-- Clean, Simple Export Footer: Dropdown Selector + 1 Big Export Button -->
-    <footer class="export-footer">
-      <div class="export-controls-box">
-        <select id="export-mode-select" class="export-mode-select" title="Choose Export Format">
-          <option value="csv">CSV Spreadsheet (.csv)</option>
-          <option value="xlsx">Excel Workbook (.xls)</option>
-          <option value="vcf">vCard for Phone / iCloud (.vcf)</option>
-          <option value="google">Google Contacts Import (.csv)</option>
-          <option value="crm">CRM Lead Export (.csv)</option>
-          <option value="zip">ZIP Archive (Separate Group Files)</option>
-          <option value="txt">Plain Numbers List (.txt)</option>
-          <option value="html">HTML Printable Report (.html)</option>
-          <option value="json">JSON Data (.json)</option>
+      <!-- Secondary Filter Bar -->
+      <div class="secondary-filters" id="secondary-filters">
+        <select id="filter-country-select" class="filter-dropdown">
+          <option value="">All Countries (All)</option>
         </select>
-        <button class="btn-main-export" id="btn-main-export">
-          <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-          <span id="btn-export-text">Export Now</span>
+        <select id="filter-type-select" class="filter-dropdown">
+          <option value="all">All Types</option>
+          <option value="saved">Saved Only</option>
+          <option value="unsaved">Unsaved Only</option>
+          <option value="business">Business Accounts</option>
+        </select>
+        <button class="btn-text-small" id="btn-reset-filters">Reset</button>
+      </div>
+
+      <!-- Main List Preview Container -->
+      <main class="list-container" id="list-container">
+        <div class="loading-state" id="loading-spinner">
+          <div class="spinner"></div>
+          <p>Reading WhatsApp data...</p>
+        </div>
+        <div class="items-list hidden" id="items-list">
+          <!-- Rendered items -->
+        </div>
+        <div class="empty-state hidden" id="empty-state">
+          <p>No matching contacts found.</p>
+        </div>
+      </main>
+
+      <!-- Clean, Simple Export Footer: Dropdown Selector + 1 Big Export Button -->
+      <footer class="export-footer">
+        <div class="export-controls-box">
+          <select id="export-mode-select" class="export-mode-select" title="Choose Export Format">
+            <option value="csv">CSV Spreadsheet (.csv)</option>
+            <option value="xlsx">Excel Workbook (.xls)</option>
+            <option value="vcf">vCard for Phone / iCloud (.vcf)</option>
+            <option value="google">Google Contacts Import (.csv)</option>
+            <option value="crm">CRM Lead Export (.csv)</option>
+            <option value="zip">ZIP Archive (Separate Group Files)</option>
+            <option value="txt">Plain Numbers List (.txt)</option>
+            <option value="html">HTML Printable Report (.html)</option>
+            <option value="json">JSON Data (.json)</option>
+          </select>
+          <button class="btn-main-export" id="btn-main-export">
+            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            <span id="btn-export-text">Export Now</span>
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ================= VIEW 2: DEDICATED SETTINGS, COLUMNS & HISTORY PAGE ================= -->
+    <div class="page-view hidden" id="view-settings">
+      <!-- Settings Page Header -->
+      <header class="settings-page-header">
+        <button class="btn-return-home" id="btn-return-home" title="Return to Home Dashboard">
+          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          <span>Return to Home</span>
         </button>
-      </div>
-    </footer>
-  </div>
+        <div class="settings-header-title">
+          <h2>Settings & History</h2>
+        </div>
+      </header>
 
-  <!-- Settings & History Modal -->
-  <div class="modal-backdrop hidden" id="settings-modal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>⚙️ Settings, Columns & History</h3>
-        <button class="btn-modal-close" id="btn-close-settings">✕</button>
-      </div>
-      <div class="modal-tabs-row">
-        <button class="modal-tab-btn active" data-modal-tab="prefs">General & Columns</button>
-        <button class="modal-tab-btn" data-modal-tab="history">Recent Exports Log</button>
-      </div>
-      <div class="modal-body" id="modal-tab-prefs">
-        <div class="setting-item">
-          <label class="setting-title">Theme</label>
-          <select id="setting-theme" class="setting-input">
-            <option value="auto">Auto (System Default)</option>
-            <option value="light">Light Theme ☀️</option>
-            <option value="dark">Dark Theme 🌙</option>
-          </select>
-        </div>
-        <div class="setting-item">
-          <label class="setting-title">CSV Delimiter</label>
-          <select id="setting-delimiter" class="setting-input">
-            <option value=",">Comma (,)</option>
-            <option value=";">Semicolon (;)</option>
-            <option value="&#9;">Tab (\t)</option>
-          </select>
-        </div>
-        <div class="setting-item">
-          <label class="setting-checkbox-label">
-            <input type="checkbox" id="setting-auto-dedupe" checked>
-            <span>Auto-Deduplicate matching phone numbers</span>
-          </label>
-        </div>
-        <div class="setting-item">
-          <label class="setting-checkbox-label">
-            <input type="checkbox" id="setting-merge-groups" checked>
-            <span>Merge contacts in multiple groups into 1 row</span>
-          </label>
-        </div>
-        <div class="setting-item">
-          <label class="setting-checkbox-label">
-            <input type="checkbox" id="setting-privacy-mask">
-            <span>Enable screen privacy mask by default</span>
-          </label>
-        </div>
+      <!-- Settings Sub-Navigation Tabs -->
+      <nav class="settings-subtabs">
+        <button class="settings-subtab-btn active" data-settings-tab="prefs">General</button>
+        <button class="settings-subtab-btn" data-settings-tab="columns">Custom Columns</button>
+        <button class="settings-subtab-btn" data-settings-tab="history">Export History</button>
+      </nav>
 
-        <!-- Custom Columns Selector -->
-        <div class="setting-section">
-          <span class="setting-section-title">Exported Columns (CSV & Excel)</span>
-          <div class="columns-grid" id="columns-selector-grid">
-            <label class="col-chk-label"><input type="checkbox" data-col="phone" checked> Phone Number</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="formattedPhone" checked> Formatted Phone</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="country" checked> Country</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="displayName" checked> Display Name</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="savedName" checked> Saved Name</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="publicName" checked> Public Push Name</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="isSaved" checked> Saved Status</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="isBusiness" checked> Business Type</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="about" checked> About / Bio</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="groupName" checked> Group Name</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="groupRole" checked> Group Role</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="labels" checked> Labels</label>
-            <label class="col-chk-label"><input type="checkbox" data-col="jid" checked> WhatsApp JID</label>
+      <!-- Settings Page Body Container -->
+      <div class="settings-page-body">
+
+        <!-- Panel 1: General Preferences -->
+        <div class="settings-panel" id="panel-settings-prefs">
+          <div class="settings-section-card">
+            <span class="card-section-title">Display & Appearance</span>
+            <div class="setting-item">
+              <label class="setting-title">Theme</label>
+              <select id="setting-theme" class="setting-input">
+                <option value="auto">Auto (System Default)</option>
+                <option value="light">Light Theme ☀️</option>
+                <option value="dark">Dark Theme 🌙</option>
+              </select>
+            </div>
+            <div class="setting-item">
+              <label class="setting-checkbox-label">
+                <input type="checkbox" id="setting-privacy-mask">
+                <span>Mask phone numbers by default for screen privacy</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-section-card">
+            <span class="card-section-title">Export & Deduplication Rules</span>
+            <div class="setting-item">
+              <label class="setting-title">CSV Delimiter</label>
+              <select id="setting-delimiter" class="setting-input">
+                <option value=",">Comma (,)</option>
+                <option value=";">Semicolon (;)</option>
+                <option value="&#9;">Tab (\t)</option>
+              </select>
+            </div>
+            <div class="setting-item">
+              <label class="setting-checkbox-label">
+                <input type="checkbox" id="setting-auto-dedupe" checked>
+                <span>Auto-Deduplicate matching phone numbers</span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <label class="setting-checkbox-label">
+                <input type="checkbox" id="setting-merge-groups" checked>
+                <span>Merge contacts found across multiple groups into 1 row</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="privacy-box">
+            <strong>🔒 100% Client-Side Privacy Guarantee</strong>
+            <p>This extension runs entirely in your local browser sandbox. No data, contacts, phone numbers, or metadata are ever transmitted to any external server.</p>
           </div>
         </div>
 
-        <div class="privacy-box">
-          <strong>🔒 100% Client-Side Privacy Guarantee</strong>
-          <p>This extension runs entirely in your local browser. No data, phone numbers, or metadata are ever transmitted to any external server.</p>
+        <!-- Panel 2: Custom Columns Selector -->
+        <div class="settings-panel hidden" id="panel-settings-columns">
+          <div class="settings-section-card">
+            <div class="columns-header-row">
+              <span class="card-section-title">Exported Columns (CSV & Excel)</span>
+              <div class="columns-actions-group">
+                <button class="btn-text-small" id="btn-columns-select-all">Select All</button>
+                <button class="btn-text-small" id="btn-columns-deselect-all">Deselect All</button>
+              </div>
+            </div>
+            <p class="section-description">Choose which fields are included when exporting contacts to CSV or Excel spreadsheets:</p>
+            <div class="columns-grid" id="columns-selector-grid">
+              <label class="col-chk-label"><input type="checkbox" data-col="phone" checked> Phone Number</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="formattedPhone" checked> Formatted Phone (+E.164)</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="country" checked> Country Name & ISO</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="displayName" checked> Display Name</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="savedName" checked> Address Book Name</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="publicName" checked> Public Push Name</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="isSaved" checked> Saved Status (Yes/No)</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="isBusiness" checked> Account Type (Business/Personal)</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="about" checked> About / Bio Status</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="groupName" checked> Group Name</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="groupRole" checked> Group Role (Admin/Member)</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="labels" checked> Business Labels</label>
+              <label class="col-chk-label"><input type="checkbox" data-col="jid" checked> WhatsApp JID Identifier</label>
+            </div>
+          </div>
         </div>
+
+        <!-- Panel 3: Export History Log -->
+        <div class="settings-panel hidden" id="panel-settings-history">
+          <div class="settings-section-card">
+            <div class="history-header">
+              <span class="card-section-title">Recent Activity Log</span>
+              <button class="btn-text-danger" id="btn-clear-history">Clear History</button>
+            </div>
+            <div class="history-list" id="history-list">
+              <p class="text-muted" style="font-size:11px;padding:16px;text-align:center;">No export history recorded yet.</p>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Export History Tab Content -->
-      <div class="modal-body hidden" id="modal-tab-history">
-        <div class="history-header">
-          <span>Recent Exports (Last 25)</span>
-          <button class="btn-text-danger" id="btn-clear-history">Clear History</button>
-        </div>
-        <div class="history-list" id="history-list">
-          <p class="text-muted" style="font-size:11px;padding:12px;text-align:center;">No export history yet.</p>
-        </div>
-      </div>
-
-      <div class="modal-footer">
+      <!-- Settings Page Footer Actions -->
+      <footer class="settings-page-footer">
+        <button class="btn-secondary-action" id="btn-return-home-footer">← Return to Home</button>
         <button class="btn-save-settings" id="btn-save-settings">Save Preferences</button>
-      </div>
+      </footer>
     </div>
+
   </div>
 
   <!-- Toast Notification -->
