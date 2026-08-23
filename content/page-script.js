@@ -553,8 +553,7 @@
           break;
 
         case 'GET_GROUPS':
-          // Run background resolution for any 0 member count groups
-          resolvePendingGroups().catch(() => {});
+          await resolvePendingGroups();
           responseData = Array.from(State.groups.values());
           break;
 

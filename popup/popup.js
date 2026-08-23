@@ -155,8 +155,7 @@
         const members = await sendToContentScript('GET_GROUP_MEMBERS', { groupJid: g.id });
         if (members && members.length > 0) {
           g.memberCount = members.length;
-          // Update live DOM badge if present
-          const badge = document.querySelector(`.badge-group-${CSS.escape(g.id)}`);
+          const badge = document.querySelector(`[data-group-badge="${CSS.escape(g.id)}"]`);
           if (badge) {
             badge.textContent = `${members.length} members`;
           }
@@ -266,7 +265,7 @@
         itemEl.className = 'group-item';
 
         const isChecked = selectedIds.has(g.id);
-        const memberText = (g.memberCount && g.memberCount > 0) ? `${g.memberCount} members` : 'Loading count...';
+        const memberText = (g.memberCount && g.memberCount > 0) ? `${g.memberCount} members` : 'Group';
 
         itemEl.innerHTML = `
           <input type="checkbox" data-id="${g.id}" ${isChecked ? 'checked' : ''}>
@@ -274,7 +273,7 @@
           <div class="contact-info">
             <div class="contact-name-row">
               <span class="contact-name">${g.name}</span>
-              <span class="badge badge-role badge-group-${CSS.escape(g.id)}">${memberText}</span>
+              <span class="badge badge-role" data-group-badge="${g.id}">${memberText}</span>
             </div>
             <span class="contact-details">Group ID: ${g.id}</span>
           </div>
@@ -302,7 +301,7 @@
           sendToContentScript('GET_GROUP_MEMBERS', { groupJid: g.id }).then(members => {
             if (members && members.length > 0) {
               g.memberCount = members.length;
-              const badge = itemEl.querySelector(`.badge-group-${CSS.escape(g.id)}`);
+              const badge = itemEl.querySelector(`[data-group-badge="${CSS.escape(g.id)}"]`);
               if (badge) badge.textContent = `${members.length} members`;
             }
           }).catch(() => {});
