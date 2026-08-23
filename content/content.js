@@ -1,6 +1,6 @@
 /**
- * WhatsApp Web Exporter - Content Script (v2.1.5)
- * Multi-Database Store Extractor for Complete Contact, Group & Label Metadata
+ * WhatsApp Web Exporter - Content Script (v2.1.6)
+ * Multi-Database Store Extractor with Accurate Label Associations & Chat Counts
  */
 
 (function () {
@@ -51,8 +51,9 @@
     const about = item.about || item.status || item.description || '';
 
     let labels = [];
-    if (Array.isArray(item.labels)) {
-      labels = item.labels.map(l => (typeof l === 'object' ? (l.name || l.id) : String(l))).filter(Boolean);
+    const rawLabels = item.labels || item.labelIds || item.labelList || (item.label !== undefined ? [item.label] : []);
+    if (Array.isArray(rawLabels)) {
+      labels = rawLabels.map(l => (typeof l === 'object' ? (l.name || l.id) : String(l))).filter(Boolean);
     }
 
     return {
@@ -226,11 +227,17 @@
                     }
                   }
 
-                  if (Array.isArray(chat.labels)) {
-                    chat.labels.forEach(lblId => {
-                      const lId = String(typeof lblId === 'object' ? (lblId.id || lblId.name) : lblId);
-                      if (!labelAssociations.has(lId)) labelAssociations.set(lId, new Set());
-                      labelAssociations.get(lId).add(jid);
+                  // Check all possible label fields on chat
+                  const rawLabels = chat.labels || chat.labelIds || chat.labelList || (chat.label !== undefined ? [chat.label] : []);
+                  if (Array.isArray(rawLabels) && rawLabels.length > 0) {
+                    rawLabels.forEach(lbl => {
+                      const lId = String(typeof lbl === 'object' ? (lbl.id || lbl.name || lbl.labelId) : lbl);
+                      if (lId) {
+                        if (!labelAssociations.has(lId)) labelAssociations.set(lId, new Set());
+                        labelAssociations.get(lId).add(jid);
+                        const phone = cleanPhone(jid.replace(/@.*$/, ''));
+                        if (phone) labelAssociations.get(lId).add(phone);
+                      }
                     });
                   }
                 });
@@ -335,7 +342,7 @@
                         id: lId,
                         name: item.name,
                         color: item.hexColor || item.color || '#00a884',
-                        count: item.count || 0
+                        count: item.count || item.itemCount || item.chatCount || 0
                       });
                     } else {
                       const existing = labelsMap.get(lId);
@@ -346,18 +353,38 @@
                   }
 
                   // Label association / items
-                  let lId = String(item.labelId || item.parentId || '');
-                  let targetId = normalizeJid(item.labeledId || item.itemId || item.chatId || item.contactId || '');
+                  let lId = '';
+                  let targetJid = '';
 
-                  if (!lId && typeof item.id === 'string' && item.id.includes('_')) {
-                    const parts = item.id.split('_');
-                    lId = parts[0];
-                    targetId = normalizeJid(parts.slice(1).join('_'));
+                  if (item.labelId !== undefined) {
+                    lId = String(item.labelId);
+                    targetJid = normalizeJid(item.parentId || item.labeledId || item.itemId || item.chatId || item.contactId || item.jid);
+                  } else if (item.label !== undefined) {
+                    lId = String(item.label);
+                    targetJid = normalizeJid(item.parentId || item.labeledId || item.itemId || item.chatId || item.contactId || item.jid || item.id);
                   }
 
-                  if (lId && targetId) {
+                  if (!lId || !targetJid) {
+                    const rawId = typeof item.id === 'string' ? item.id : '';
+                    if (rawId.includes('_')) {
+                      const parts = rawId.split('_');
+                      if (parts.length >= 2) {
+                        if (/^\d+$/.test(parts[0])) {
+                          lId = parts[0];
+                          targetJid = normalizeJid(parts.slice(1).join('_'));
+                        } else if (/^\d+$/.test(parts[parts.length - 1])) {
+                          lId = parts[parts.length - 1];
+                          targetJid = normalizeJid(parts.slice(0, -1).join('_'));
+                        }
+                      }
+                    }
+                  }
+
+                  if (lId && targetJid) {
                     if (!labelAssociations.has(lId)) labelAssociations.set(lId, new Set());
-                    labelAssociations.get(lId).add(targetId);
+                    labelAssociations.get(lId).add(targetJid);
+                    const phoneOnly = cleanPhone(targetJid.replace(/@.*$/, ''));
+                    if (phoneOnly) labelAssociations.get(lId).add(phoneOnly);
                   }
                 });
               } catch (e) {}
@@ -388,6 +415,7 @@
         const jidVariants = [
           c.id,
           c.jid,
+          phoneMatch,
           `${phoneMatch}@c.us`,
           `${phoneMatch}@s.whatsapp.net`
         ].filter(Boolean);
