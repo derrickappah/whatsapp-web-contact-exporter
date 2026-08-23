@@ -718,13 +718,12 @@ body {
 
 /* Settings Page Navigation Header */
 .settings-page-header {
-  padding: 10px 14px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
-  gap: 10px;
 }
 
 .btn-return-home {
