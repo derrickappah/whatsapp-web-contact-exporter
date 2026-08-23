@@ -1,5 +1,5 @@
 /**
- * WhatsApp Web Exporter - Content Script (v2.1.4)
+ * WhatsApp Web Exporter - Content Script (v2.1.5)
  * Multi-Database Store Extractor for Complete Contact, Group & Label Metadata
  */
 
@@ -325,6 +325,9 @@
               try {
                 const items = await readStoreAll(db, lStore);
                 items.forEach(item => {
+                  if (!item) return;
+
+                  // Label definition
                   if (item.name && item.id !== undefined) {
                     const lId = String(item.id);
                     if (!labelsMap.has(lId)) {
@@ -334,15 +337,27 @@
                         color: item.hexColor || item.color || '#00a884',
                         count: item.count || 0
                       });
+                    } else {
+                      const existing = labelsMap.get(lId);
+                      if (item.name) existing.name = item.name;
+                      if (item.hexColor || item.color) existing.color = item.hexColor || item.color;
+                      if (item.count) existing.count = Math.max(existing.count || 0, item.count);
                     }
                   }
-                  if (item.labelId !== undefined || item.labeledId !== undefined || item.associationId !== undefined || item.itemId !== undefined) {
-                    const lId = String(item.labelId || item.parentId || item.id?.split('_')?.[0]);
-                    const targetId = normalizeJid(item.labeledId || item.itemId || item.chatId || item.contactId || item.id?.split('_')?.[1]);
-                    if (lId && targetId) {
-                      if (!labelAssociations.has(lId)) labelAssociations.set(lId, new Set());
-                      labelAssociations.get(lId).add(targetId);
-                    }
+
+                  // Label association / items
+                  let lId = String(item.labelId || item.parentId || '');
+                  let targetId = normalizeJid(item.labeledId || item.itemId || item.chatId || item.contactId || '');
+
+                  if (!lId && typeof item.id === 'string' && item.id.includes('_')) {
+                    const parts = item.id.split('_');
+                    lId = parts[0];
+                    targetId = normalizeJid(parts.slice(1).join('_'));
+                  }
+
+                  if (lId && targetId) {
+                    if (!labelAssociations.has(lId)) labelAssociations.set(lId, new Set());
+                    labelAssociations.get(lId).add(targetId);
                   }
                 });
               } catch (e) {}
@@ -357,15 +372,46 @@
       });
     }
 
-    // Update label counts
+    // Enrich contacts with human-readable label names and associations
+    contactsMap.forEach(c => {
+      if (Array.isArray(c.labels) && c.labels.length > 0) {
+        c.labels = c.labels.map(lbl => {
+          const lId = String(lbl);
+          const found = labelsMap.get(lId);
+          return found ? found.name : lId;
+        });
+      }
+
+      // Associate contacts matching label associations
+      for (const [lId, jidsSet] of labelAssociations.entries()) {
+        const phoneMatch = cleanPhone(c.phoneNumber);
+        const jidVariants = [
+          c.id,
+          c.jid,
+          `${phoneMatch}@c.us`,
+          `${phoneMatch}@s.whatsapp.net`
+        ].filter(Boolean);
+
+        const hasMatch = jidVariants.some(j => jidsSet.has(j));
+        if (hasMatch) {
+          const labelName = labelsMap.get(lId)?.name || lId;
+          if (!c.labels.includes(labelName)) {
+            c.labels.push(labelName);
+          }
+        }
+      }
+    });
+
+    // Update label counts accurately
     labelsMap.forEach(label => {
       const assoc = labelAssociations.get(label.id) || new Set();
+      let matchedCount = 0;
       contactsMap.forEach(c => {
         if (c.labels && (c.labels.includes(label.name) || c.labels.includes(label.id))) {
-          assoc.add(c.id || c.phoneNumber);
+          matchedCount++;
         }
       });
-      label.count = Math.max(label.count || 0, assoc.size);
+      label.count = Math.max(label.count || 0, assoc.size, matchedCount);
     });
 
     if (action === 'GET_INITIAL_DATA') {
