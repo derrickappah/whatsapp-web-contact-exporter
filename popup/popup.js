@@ -264,12 +264,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function populateCountryFilter() {
-    filterCountrySelect.innerHTML = '<option value="">All Countries 🌐</option>';
+    filterCountrySelect.innerHTML = '<option value="">All Countries (All)</option>';
     const sortedCountries = Array.from(countryMap.values()).sort((a, b) => b.count - a.count);
     sortedCountries.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.iso;
-      opt.textContent = `${c.flag} ${c.name} (${c.count})`;
+      opt.textContent = `${c.iso} — ${c.name} (${c.count})`;
       filterCountrySelect.appendChild(opt);
     });
   }
@@ -362,17 +362,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isChecked = selectedIds.has(id);
         const initial = (c.displayName || c.phoneNumber || '?').charAt(0).toUpperCase();
         const displayPhone = isMasked && window.WAPhoneUtils ? window.WAPhoneUtils.maskPhone(c.phoneNumber) : (c.formattedNumber || `+${c.phoneNumber}`);
+        const countryBadge = (c.countryIso && c.countryIso !== 'XX') ? `<span class="country-pill">${c.countryIso}</span>` : '';
 
         itemEl.innerHTML = `
           <input type="checkbox" data-id="${id}" ${isChecked ? 'checked' : ''}>
-          <div class="contact-avatar">${c.countryFlag || initial}</div>
+          <div class="contact-avatar">${initial}</div>
           <div class="contact-info">
             <div class="contact-name-row">
               <span class="contact-name">${c.displayName || 'Unknown'}</span>
               ${c.isSaved ? '<span class="badge badge-saved">Saved</span>' : '<span class="badge badge-unsaved">Unsaved</span>'}
               ${c.isBusiness ? '<span class="badge badge-role">Biz</span>' : ''}
             </div>
-            <span class="contact-details">${displayPhone} • ${c.countryName || 'Global'} ${c.about ? '• ' + c.about : ''}</span>
+            <span class="contact-details">${countryBadge} ${displayPhone} • ${c.countryName || 'Global'} ${c.about ? '• ' + c.about : ''}</span>
           </div>
         `;
 
@@ -438,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const itemEl = document.createElement('div');
         itemEl.className = 'country-item';
         itemEl.innerHTML = `
-          <div class="contact-avatar" style="font-size:16px;">${c.flag}</div>
+          <div class="contact-avatar country-iso-avatar">${c.iso}</div>
           <div class="contact-info">
             <div class="contact-name-row">
               <span class="contact-name">${c.name}</span>
