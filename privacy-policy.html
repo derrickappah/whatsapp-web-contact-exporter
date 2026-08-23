@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - WhatsApp Web Contact & Group Exporter</title>
+  <style>
+    :root {
+      --primary: #00a884;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #00a884;
+        --bg: #0f172a;
+        --card-bg: #1e293b;
+        --text: #f1f5f9;
+        --text-muted: #94a3b8;
+        --border: #334155;
+      }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    h1 {
+      color: var(--primary);
+      font-size: 26px;
+      margin-top: 0;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 12px;
+    }
+    h2 {
+      font-size: 18px;
+      margin-top: 28px;
+      color: var(--text);
+    }
+    p, li {
+      font-size: 14.5px;
+      color: var(--text);
+    }
+    .meta {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(0, 168, 132, 0.15);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .disclaimer {
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="badge">🔒 100% Client-Side Privacy Guarantee</span>
+    <h1>Privacy Policy</h1>
+    <div class="meta"><strong>Item:</strong> WhatsApp Web Contact & Group Exporter • <strong>Last Updated:</strong> August 23, 2026</div>
+
+    <p>This Privacy Policy describes how <strong>WhatsApp Web Contact & Group Exporter</strong> ("the extension") handles user information. We believe in total data ownership and zero tracking.</p>
+
+    <h2>1. Zero Data Collection & External Transmission</h2>
+    <ul>
+      <li><strong>No Remote Servers:</strong> The extension does not communicate with or operate any external servers, databases, or cloud APIs.</li>
+      <li><strong>No Personal Data Transmission:</strong> We never collect, transmit, store, sell, or share your contacts, phone numbers, group names, chat messages, or metadata.</li>
+      <li><strong>100% Client-Side Execution:</strong> All extraction, deduplication, formatting, and file exports (CSV, Excel, vCard, ZIP) execute strictly within your local browser sandbox.</li>
+    </ul>
+
+    <h2>2. Local Data Processing</h2>
+    <p>When you open the extension on WhatsApp Web (<code>web.whatsapp.com</code>), the following data is processed temporarily in memory solely to fulfill your requested export:</p>
+    <ul>
+      <li><strong>Contacts & Leads:</strong> Read from your active session to generate your export files.</li>
+      <li><strong>Group Metadata:</strong> Participant numbers and admin roles read to create group spreadsheets.</li>
+      <li><strong>Local Preferences:</strong> Theme settings, column configurations, and delimiters are stored in your own browser via <code>chrome.storage.local</code> and never leave your device.</li>
+    </ul>
+
+    <h2>3. Chrome Permissions</h2>
+    <ul>
+      <li><code>https://web.whatsapp.com/*</code>: Required to read contact and group metadata on demand.</li>
+      <li><code>storage</code>: Required to store your UI preferences locally on your computer.</li>
+    </ul>
+
+    <h2>4. Analytics & Tracking</h2>
+    <p>We do <strong>not</strong> include any third-party analytics libraries, advertising trackers, tracking pixels, or remote telemetry scripts.</p>
+
+    <h2>5. Contact & Support</h2>
+    <p>For inquiries or bug reports, visit our public GitHub repository:<br>
+      <a href="https://github.com/derrickappah/whatsapp-web-contact-exporter" target="_blank">https://github.com/derrickappah/whatsapp-web-contact-exporter</a>
+    </p>
+
+    <div class="disclaimer">
+      <em>Disclaimer: WhatsApp™ is a registered trademark of Meta Platforms, Inc. This extension is an independent tool and is not affiliated with, endorsed by, or sponsored by Meta Platforms, Inc. or WhatsApp Inc.</em>
+    </div>
+  </div>
+</body>
+</html>
