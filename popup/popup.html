@@ -19,22 +19,25 @@
         <div class="title-group">
           <div class="title-row">
             <h1>WA Exporter Pro</h1>
-            <span class="version-tag">v2.0</span>
+            <span class="version-tag">v2.1</span>
           </div>
           <div class="status-badge" id="status-indicator">
             <span class="status-dot dot-offline"></span>
-            <span id="status-text">Checking WhatsApp Web...</span>
+            <span id="status-text">Connecting to WhatsApp...</span>
           </div>
         </div>
       </div>
       <div class="header-actions">
+        <button class="btn-icon" id="btn-theme-toggle" title="Toggle Light / Dark Theme">
+          <svg viewBox="0 0 24 24" id="theme-icon"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+        </button>
         <button class="btn-icon" id="btn-mask" title="Toggle Privacy Number Masking">
           <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
         </button>
         <button class="btn-icon" id="btn-copy-all" title="Copy Selected Numbers to Clipboard">
           <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
         </button>
-        <button class="btn-icon" id="btn-settings" title="Export Settings">
+        <button class="btn-icon" id="btn-settings" title="Export Preferences & History">
           <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
         </button>
         <button class="btn-icon" id="btn-refresh" title="Refresh Data">
@@ -127,6 +130,7 @@
           <select id="export-mode-select" class="export-mode-select">
             <option value="csv">CSV File (.csv)</option>
             <option value="xlsx">Excel Spreadsheet (.xlsx / .xls)</option>
+            <option value="zip">ZIP Archive (Separate Group Files)</option>
             <option value="vcf">vCard Contact (.vcf)</option>
             <option value="google">Google Contacts CSV</option>
             <option value="crm">CRM Lead Export</option>
@@ -139,8 +143,8 @@
       <div class="format-buttons">
         <button class="btn-format" data-format="csv" title="Standard CSV with UTF-8 BOM">CSV</button>
         <button class="btn-format" data-format="xlsx" title="Formatted Excel Workbook">Excel</button>
+        <button class="btn-format" data-format="zip" title="ZIP Bundle for Groups">ZIP</button>
         <button class="btn-format" data-format="vcf" title="vCard for Mobile Import">vCard</button>
-        <button class="btn-format" data-format="google" title="Google Contacts Import Format">Google</button>
         <button class="btn-format btn-primary-export" id="btn-main-export" title="Export Selected Contacts">
           <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
           Download
@@ -149,16 +153,28 @@
     </footer>
   </div>
 
-  <!-- Settings Modal -->
+  <!-- Settings & History Modal -->
   <div class="modal-backdrop hidden" id="settings-modal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>⚙️ Exporter Settings & Privacy</h3>
+        <h3>⚙️ Settings, Columns & History</h3>
         <button class="btn-modal-close" id="btn-close-settings">✕</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-tabs-row">
+        <button class="modal-tab-btn active" data-modal-tab="prefs">General & Columns</button>
+        <button class="modal-tab-btn" data-modal-tab="history">Recent Exports Log</button>
+      </div>
+      <div class="modal-body" id="modal-tab-prefs">
         <div class="setting-item">
-          <label class="setting-title">Default Delimiter</label>
+          <label class="setting-title">Theme</label>
+          <select id="setting-theme" class="setting-input">
+            <option value="auto">Auto (System Default)</option>
+            <option value="light">Light Theme ☀️</option>
+            <option value="dark">Dark Theme 🌙</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label class="setting-title">CSV Delimiter</label>
           <select id="setting-delimiter" class="setting-input">
             <option value=",">Comma (,)</option>
             <option value=";">Semicolon (;)</option>
@@ -173,15 +189,54 @@
         </div>
         <div class="setting-item">
           <label class="setting-checkbox-label">
+            <input type="checkbox" id="setting-merge-groups" checked>
+            <span>Merge contacts in multiple groups into 1 row</span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <label class="setting-checkbox-label">
             <input type="checkbox" id="setting-privacy-mask">
             <span>Enable screen privacy mask by default</span>
           </label>
         </div>
+
+        <!-- Custom Columns Selector -->
+        <div class="setting-section">
+          <span class="setting-section-title">Exported Columns (CSV & Excel)</span>
+          <div class="columns-grid" id="columns-selector-grid">
+            <label class="col-chk-label"><input type="checkbox" data-col="phone" checked> Phone Number</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="formattedPhone" checked> Formatted Phone</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="country" checked> Country</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="displayName" checked> Display Name</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="savedName" checked> Saved Name</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="publicName" checked> Public Push Name</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="isSaved" checked> Saved Status</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="isBusiness" checked> Business Type</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="about" checked> About / Bio</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="groupName" checked> Group Name</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="groupRole" checked> Group Role</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="labels" checked> Labels</label>
+            <label class="col-chk-label"><input type="checkbox" data-col="jid" checked> WhatsApp JID</label>
+          </div>
+        </div>
+
         <div class="privacy-box">
           <strong>🔒 100% Client-Side Privacy Guarantee</strong>
           <p>This extension runs entirely in your local browser. No data, phone numbers, or metadata are ever transmitted to any external server.</p>
         </div>
       </div>
+
+      <!-- Export History Tab Content -->
+      <div class="modal-body hidden" id="modal-tab-history">
+        <div class="history-header">
+          <span>Recent Exports (Last 25)</span>
+          <button class="btn-text-danger" id="btn-clear-history">Clear History</button>
+        </div>
+        <div class="history-list" id="history-list">
+          <p class="text-muted" style="font-size:11px;padding:12px;text-align:center;">No export history yet.</p>
+        </div>
+      </div>
+
       <div class="modal-footer">
         <button class="btn-save-settings" id="btn-save-settings">Save Preferences</button>
       </div>
@@ -193,6 +248,7 @@
 
   <script src="../lib/countries.js"></script>
   <script src="../lib/phone-utils.js"></script>
+  <script src="../lib/zip.js"></script>
   <script src="../lib/storage.js"></script>
   <script src="../lib/exporters.js"></script>
   <script src="popup.js"></script>

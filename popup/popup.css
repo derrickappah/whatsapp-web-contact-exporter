@@ -1,4 +1,4 @@
-/* WhatsApp Web Exporter Pro - Popup Stylesheet */
+/* WhatsApp Web Exporter Pro - Popup Stylesheet (v2.1) */
 
 :root {
   --primary: #00a884;
@@ -17,6 +17,7 @@
   --radius-lg: 14px;
 }
 
+/* System Dark Mode */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-page: #111b21;
@@ -28,6 +29,30 @@
     --shadow-sm: 0 2px 6px rgba(0,0,0,0.3);
     --shadow-md: 0 6px 20px rgba(0,0,0,0.45);
   }
+}
+
+/* Explicit Light Theme override */
+body.theme-light {
+  --bg-page: #f0f2f5;
+  --bg-card: #ffffff;
+  --text-main: #111b21;
+  --text-secondary: #667781;
+  --border: #e9edef;
+  --primary-light: rgba(0, 168, 132, 0.12);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 14px rgba(0,0,0,0.15);
+}
+
+/* Explicit Dark Theme override */
+body.theme-dark {
+  --bg-page: #111b21;
+  --bg-card: #202c33;
+  --text-main: #e9edef;
+  --text-secondary: #8696a0;
+  --border: #2a3942;
+  --primary-light: rgba(0, 168, 132, 0.2);
+  --shadow-sm: 0 2px 6px rgba(0,0,0,0.3);
+  --shadow-md: 0 6px 20px rgba(0,0,0,0.45);
 }
 
 * {
@@ -505,8 +530,14 @@ body {
   text-transform: uppercase;
 }
 
+.export-dropdown-wrapper {
+  flex: 1;
+  max-width: 240px;
+}
+
 .export-mode-select {
-  padding: 3px 6px;
+  width: 100%;
+  padding: 4px 6px;
   border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--bg-page);
@@ -576,7 +607,8 @@ body {
 }
 
 .modal-card {
-  width: 380px;
+  width: 400px;
+  max-height: 520px;
   background: var(--bg-card);
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
@@ -587,7 +619,7 @@ body {
 }
 
 .modal-header {
-  padding: 12px 16px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -607,11 +639,37 @@ body {
   color: var(--text-secondary);
 }
 
+.modal-tabs-row {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-page);
+}
+
+.modal-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.modal-tab-btn.active {
+  color: var(--primary);
+  background: var(--bg-card);
+  border-bottom-color: var(--primary);
+}
+
 .modal-body {
-  padding: 16px;
+  padding: 14px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  max-height: 380px;
 }
 
 .setting-item {
@@ -627,7 +685,7 @@ body {
 }
 
 .setting-input {
-  padding: 6px;
+  padding: 5px 8px;
   border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--bg-page);
@@ -643,18 +701,118 @@ body {
   cursor: pointer;
 }
 
+.setting-checkbox-label input {
+  accent-color: var(--primary);
+}
+
+.setting-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.setting-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: uppercase;
+}
+
+.columns-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  background: var(--bg-page);
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.col-chk-label {
+  font-size: 10.5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.col-chk-label input {
+  accent-color: var(--primary);
+}
+
+/* History Log List */
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.btn-text-danger {
+  background: none;
+  border: none;
+  color: #ea0038;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-text-danger:hover {
+  text-decoration: underline;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-page);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.history-filename {
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+.history-meta {
+  font-size: 9.5px;
+  color: var(--text-secondary);
+}
+
 .privacy-box {
   background: var(--bg-page);
   border-radius: 6px;
-  padding: 10px;
-  font-size: 10.5px;
+  padding: 8px 10px;
+  font-size: 10px;
   color: var(--text-secondary);
   line-height: 1.4;
 }
 
 .privacy-box strong {
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   color: var(--primary);
 }
 

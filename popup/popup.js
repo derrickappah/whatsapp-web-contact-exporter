@@ -1,6 +1,6 @@
 /**
- * WhatsApp Web Exporter Pro - Popup Controller
- * Manages Dashboard, Search, Country Segmentation, Group Inspection & Multi-Format Exports
+ * WhatsApp Web Exporter Pro - Popup Controller (v2.1)
+ * Manages Dashboard, Live Search, Country Segmentation, Custom Columns, ZIP Exports & Activity History
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const itemsList = document.getElementById('items-list');
   const emptyState = document.getElementById('empty-state');
 
+  const btnThemeToggle = document.getElementById('btn-theme-toggle');
   const btnMask = document.getElementById('btn-mask');
   const btnCopyAll = document.getElementById('btn-copy-all');
   const btnSettings = document.getElementById('btn-settings');
@@ -39,13 +40,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnMainExport = document.getElementById('btn-main-export');
   const formatButtons = document.querySelectorAll('.btn-format:not(.btn-primary-export)');
 
-  // Settings Modal
+  // Settings & History Modal Elements
   const settingsModal = document.getElementById('settings-modal');
   const btnCloseSettings = document.getElementById('btn-close-settings');
   const btnSaveSettings = document.getElementById('btn-save-settings');
+  const modalTabBtns = document.querySelectorAll('.modal-tab-btn');
+  const modalTabPrefs = document.getElementById('modal-tab-prefs');
+  const modalTabHistory = document.getElementById('modal-tab-history');
+
+  const settingTheme = document.getElementById('setting-theme');
   const settingDelimiter = document.getElementById('setting-delimiter');
   const settingAutoDedupe = document.getElementById('setting-auto-dedupe');
+  const settingMergeGroups = document.getElementById('setting-merge-groups');
   const settingPrivacyMask = document.getElementById('setting-privacy-mask');
+  const columnsGrid = document.getElementById('columns-selector-grid');
+
+  const historyList = document.getElementById('history-list');
+  const btnClearHistory = document.getElementById('btn-clear-history');
 
   const toastPopup = document.getElementById('toast-popup');
 
@@ -68,17 +79,52 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
 
   /**
-   * Load User Settings
+   * Load User Settings & Theme
    */
   async function initSettings() {
     if (window.WASettings) {
       userSettings = await window.WASettings.getSettings();
+      applyTheme(userSettings.theme || 'auto');
+      if (settingTheme) settingTheme.value = userSettings.theme || 'auto';
       if (userSettings.delimiter) settingDelimiter.value = userSettings.delimiter;
       settingAutoDedupe.checked = Boolean(userSettings.autoDeduplicate);
+      settingMergeGroups.checked = Boolean(userSettings.mergeMultiGroups !== false);
       settingPrivacyMask.checked = Boolean(userSettings.maskNumbers);
       isMasked = Boolean(userSettings.maskNumbers);
       if (userSettings.defaultFormat) exportModeSelect.value = userSettings.defaultFormat;
+
+      // Populate Column Checkboxes
+      if (userSettings.selectedColumns && columnsGrid) {
+        columnsGrid.querySelectorAll('input[data-col]').forEach(chk => {
+          const colKey = chk.getAttribute('data-col');
+          if (userSettings.selectedColumns[colKey] !== undefined) {
+            chk.checked = Boolean(userSettings.selectedColumns[colKey]);
+          }
+        });
+      }
     }
+  }
+
+  function applyTheme(theme) {
+    document.body.classList.remove('theme-light', 'theme-dark');
+    if (theme === 'light') {
+      document.body.classList.add('theme-light');
+    } else if (theme === 'dark') {
+      document.body.classList.add('theme-dark');
+    }
+  }
+
+  function toggleTheme() {
+    const current = userSettings.theme || 'auto';
+    let next = 'dark';
+    if (current === 'dark') next = 'light';
+    else if (current === 'light') next = 'auto';
+
+    userSettings.theme = next;
+    applyTheme(next);
+    if (settingTheme) settingTheme.value = next;
+    if (window.WASettings) window.WASettings.saveSettings({ theme: next });
+    showToast(`Theme: ${next.toUpperCase()}`);
   }
 
   /**
@@ -151,7 +197,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     setStatus('warning', 'Connecting to WhatsApp...');
 
     try {
-      // Single unified query to content script (10ms)
       const initialData = await sendToContentScript('GET_INITIAL_DATA').catch(() => ({ contacts: [], groups: [], labels: [] }));
 
       let rawContacts = initialData.contacts || [];
@@ -375,7 +420,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           quickExportSingleGroup(g);
         });
 
-        // Trigger on-demand count if zero
         if (!g.memberCount || g.memberCount === 0) {
           sendToContentScript('GET_GROUP_MEMBERS', { groupJid: g.id }).then(members => {
             if (members && members.length > 0) {
@@ -498,17 +542,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
+      // Handle ZIP Export Mode for Multiple Groups
+      if (format === 'zip') {
+        showToast(`Preparing ZIP archive for ${selectedGroups.length} groups...`);
+        const groupsWithMembers = [];
+
+        for (const g of selectedGroups) {
+          const members = await sendToContentScript('GET_GROUP_MEMBERS', { groupJid: g.id }).catch(() => []);
+          groupsWithMembers.push({ name: g.name, members });
+        }
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const zipName = `whatsapp_groups_${dateStr}.zip`;
+        window.WAExporters.exportGroupsToZip(groupsWithMembers, zipName, 'csv', userSettings.delimiter || ',', userSettings.selectedColumns);
+
+        if (window.WASettings) {
+          window.WASettings.addHistoryEntry({
+            filename: zipName,
+            format: 'ZIP',
+            count: groupsWithMembers.reduce((acc, g) => acc + g.members.length, 0),
+            source: `${selectedGroups.length} Groups`
+          });
+        }
+
+        showToast(`🎉 Exported ${selectedGroups.length} groups into ZIP!`);
+        return;
+      }
+
       showToast(`Extracting members from ${selectedGroups.length} groups...`);
-      const allMembersMap = new Map();
+      let allGroupMembers = [];
 
       for (const g of selectedGroups) {
         const members = await sendToContentScript('GET_GROUP_MEMBERS', { groupJid: g.id }).catch(() => []);
-        members.forEach(m => {
-          if (m.phoneNumber) allMembersMap.set(m.phoneNumber, m);
-        });
+        allGroupMembers = allGroupMembers.concat(members);
       }
 
-      targetContacts = Array.from(allMembersMap.values());
+      if (userSettings.mergeMultiGroups !== false && window.WAExporters.mergeGroupContacts) {
+        targetContacts = window.WAExporters.mergeGroupContacts(allGroupMembers);
+      } else {
+        targetContacts = allGroupMembers;
+      }
+
       filenamePrefix = selectedGroups.length === 1 ? `group_${selectedGroups[0].name.replace(/[^a-zA-Z0-9_-]/g, '_')}_members` : 'whatsapp_group_members';
 
     } else if (currentTab === 'countries') {
@@ -543,13 +617,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const delimiter = userSettings.delimiter || ',';
+    const columns = userSettings.selectedColumns;
 
     switch (format) {
       case 'csv':
-        window.WAExporters.exportToCSV(contacts, filename, delimiter);
+        window.WAExporters.exportToCSV(contacts, filename, delimiter, columns);
         break;
       case 'xlsx':
-        window.WAExporters.exportToExcel(contacts, filename, filenamePrefix);
+        window.WAExporters.exportToExcel(contacts, filename, filenamePrefix, columns);
         break;
       case 'vcf':
         window.WAExporters.exportToVCard(contacts, filename);
@@ -570,7 +645,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.WAExporters.exportToJSON(contacts, filename);
         break;
       default:
-        window.WAExporters.exportToCSV(contacts, filename, delimiter);
+        window.WAExporters.exportToCSV(contacts, filename, delimiter, columns);
+    }
+
+    // Record export history
+    if (window.WASettings) {
+      window.WASettings.addHistoryEntry({
+        filename: filename,
+        format: format.toUpperCase(),
+        count: contacts.length,
+        source: currentTab.toUpperCase()
+      });
     }
 
     showToast(`🎉 Exported ${contacts.length} contacts (${format.toUpperCase()})`);
@@ -611,6 +696,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {
       showToast('Could not copy to clipboard');
     }
+  }
+
+  /**
+   * Render Recent Exports Log
+   */
+  async function renderExportHistory() {
+    if (!historyList || !window.WASettings) return;
+    const settings = await window.WASettings.getSettings();
+    const history = settings.exportHistory || [];
+
+    if (history.length === 0) {
+      historyList.innerHTML = '<p class="text-muted" style="font-size:11px;padding:16px;text-align:center;">No export history yet.</p>';
+      return;
+    }
+
+    historyList.innerHTML = '';
+    history.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'history-card';
+      const timeStr = new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      card.innerHTML = `
+        <div class="history-info">
+          <span class="history-filename">${item.filename}</span>
+          <span class="history-meta">${item.count} contacts • ${item.source || 'Export'} • ${timeStr}</span>
+        </div>
+        <span class="badge badge-role">${item.format}</span>
+      `;
+      historyList.appendChild(card);
+    });
   }
 
   /**
@@ -684,6 +799,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       showToast('Filters reset');
     });
 
+    // Theme toggle
+    btnThemeToggle.addEventListener('click', toggleTheme);
+
     // Privacy Mask Toggle
     btnMask.addEventListener('click', () => {
       isMasked = !isMasked;
@@ -710,19 +828,58 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Settings Modal
     btnSettings.addEventListener('click', () => {
       settingsModal.classList.remove('hidden');
+      renderExportHistory();
     });
 
     btnCloseSettings.addEventListener('click', () => {
       settingsModal.classList.add('hidden');
     });
 
+    // Modal Tabs
+    modalTabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modalTabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.getAttribute('data-modal-tab');
+        if (tab === 'history') {
+          modalTabPrefs.classList.add('hidden');
+          modalTabHistory.classList.remove('hidden');
+          renderExportHistory();
+        } else {
+          modalTabPrefs.classList.remove('hidden');
+          modalTabHistory.classList.add('hidden');
+        }
+      });
+    });
+
+    // Clear History
+    if (btnClearHistory) {
+      btnClearHistory.addEventListener('click', async () => {
+        if (window.WASettings) await window.WASettings.clearHistory();
+        renderExportHistory();
+        showToast('History cleared');
+      });
+    }
+
+    // Save Settings
     btnSaveSettings.addEventListener('click', async () => {
+      const selectedColumns = {};
+      if (columnsGrid) {
+        columnsGrid.querySelectorAll('input[data-col]').forEach(chk => {
+          selectedColumns[chk.getAttribute('data-col')] = chk.checked;
+        });
+      }
+
       if (window.WASettings) {
         userSettings = await window.WASettings.saveSettings({
+          theme: settingTheme.value,
           delimiter: settingDelimiter.value,
           autoDeduplicate: settingAutoDedupe.checked,
-          maskNumbers: settingPrivacyMask.checked
+          mergeMultiGroups: settingMergeGroups.checked,
+          maskNumbers: settingPrivacyMask.checked,
+          selectedColumns: selectedColumns
         });
+        applyTheme(userSettings.theme || 'auto');
         isMasked = Boolean(userSettings.maskNumbers);
       }
       settingsModal.classList.add('hidden');
