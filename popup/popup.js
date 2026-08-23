@@ -848,27 +848,47 @@ document.addEventListener('DOMContentLoaded', async () => {
       showToast('Filters reset');
     });
 
-    // Theme toggle
-    btnThemeToggle.addEventListener('click', toggleTheme);
+    function triggerAnimation(btn, animClass, duration = 650) {
+      if (!btn) return;
+      btn.classList.remove(animClass);
+      // Force reflow
+      void btn.offsetWidth;
+      btn.classList.add(animClass);
+      setTimeout(() => btn.classList.remove(animClass), duration);
+    }
 
-    // Privacy Mask Toggle
+    // Theme toggle with 360° spin animation
+    btnThemeToggle.addEventListener('click', () => {
+      triggerAnimation(btnThemeToggle, 'anim-theme-spin', 550);
+      toggleTheme();
+    });
+
+    // Privacy Mask Toggle with eye blink animation
     btnMask.addEventListener('click', () => {
+      triggerAnimation(btnMask, 'anim-eye-blink', 450);
       isMasked = !isMasked;
       renderCurrentView();
       showToast(isMasked ? '👁️ Privacy Mask Enabled' : '👁️ Numbers Visible');
     });
 
-    // Copy to clipboard
-    btnCopyAll.addEventListener('click', copySelectedNumbers);
+    // Copy to clipboard with pop & bounce animation
+    btnCopyAll.addEventListener('click', () => {
+      triggerAnimation(btnCopyAll, 'anim-copy-pop', 500);
+      copySelectedNumbers();
+    });
 
-    // Refresh
-    btnRefresh.addEventListener('click', loadData);
+    // Refresh with smooth 360° spin animation
+    btnRefresh.addEventListener('click', () => {
+      triggerAnimation(btnRefresh, 'anim-refresh-spin', 650);
+      loadData();
+    });
 
     // Export trigger
     btnMainExport.addEventListener('click', () => performExport());
 
-    // Settings Modal
+    // Settings Modal with gear rotation animation
     btnSettings.addEventListener('click', () => {
+      triggerAnimation(btnSettings, 'anim-gear-spin', 600);
       settingsModal.classList.remove('hidden');
       renderExportHistory();
     });
