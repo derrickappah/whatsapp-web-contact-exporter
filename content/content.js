@@ -86,8 +86,67 @@
     });
   }
 
-  // Fast on-demand database reader across all relevant stores
+  function queryPageContext(timeoutMs = 400) {
+    return new Promise((resolve) => {
+      const requestId = 'req_' + Math.random().toString(36).substring(2);
+      let resolved = false;
+
+      const handler = (event) => {
+        if (event.source !== window || !event.data || event.data.type !== 'WA_EXPORTER_PAGE_RESPONSE') return;
+        if (event.data.requestId === requestId) {
+          resolved = true;
+          window.removeEventListener('message', handler);
+          resolve(event.data.data);
+        }
+      };
+
+      window.addEventListener('message', handler);
+      window.postMessage({ type: 'WA_EXPORTER_PAGE_QUERY', requestId }, '*');
+
+      setTimeout(() => {
+        if (!resolved) {
+          window.removeEventListener('message', handler);
+          resolve(null);
+        }
+      }, timeoutMs);
+    });
+  }
+
+  // Fast on-demand database reader across all relevant stores & live page context
   async function extractData(action, payload) {
+    const contactsMap = new Map();
+    const groupsMap = new Map();
+    const groupMembersMap = new Map();
+    const labelsMap = new Map();
+    const labelAssociations = new Map();
+
+    // 1. Query live page context (window.Store / MAIN world) for instant live labels
+    try {
+      const livePageData = await queryPageContext(350);
+      if (livePageData) {
+        if (Array.isArray(livePageData.labels)) {
+          livePageData.labels.forEach(l => {
+            if (l && l.id) {
+              labelsMap.set(String(l.id), {
+                id: String(l.id),
+                name: l.name || `Label ${l.id}`,
+                color: l.color || '#00a884',
+                count: l.count || 0
+              });
+            }
+          });
+        }
+        if (livePageData.labelAssociations && typeof livePageData.labelAssociations === 'object') {
+          for (const [k, arr] of Object.entries(livePageData.labelAssociations)) {
+            if (!labelAssociations.has(k)) labelAssociations.set(k, new Set());
+            if (Array.isArray(arr)) {
+              arr.forEach(jid => labelAssociations.get(k).add(jid));
+            }
+          }
+        }
+      }
+    } catch (e) {}
+
     let dbNames = ['wawc', 'model-storage'];
     if (indexedDB.databases) {
       try {
@@ -104,12 +163,6 @@
         }
       } catch (e) {}
     }
-
-    const contactsMap = new Map();
-    const groupsMap = new Map();
-    const groupMembersMap = new Map();
-    const labelsMap = new Map();
-    const labelAssociations = new Map();
 
     for (const dbName of dbNames) {
       await new Promise((resolve) => {
