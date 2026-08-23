@@ -530,88 +530,69 @@ body {
   background: var(--primary-hover);
 }
 
-/* Footer / Export Area */
+/* Clean Single-Action Export Footer */
 .export-footer {
-  padding: 8px 12px;
+  padding: 10px 12px;
   background: var(--bg-card);
   border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 
-.export-header-row {
+.export-controls-box {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.export-label {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-}
-
-.export-dropdown-wrapper {
-  flex: 1;
-  max-width: 240px;
+  gap: 8px;
 }
 
 .export-mode-select {
-  width: 100%;
-  padding: 4px 6px;
-  border-radius: 4px;
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--bg-page);
   color: var(--text-main);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
 }
 
-.format-buttons {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
+.export-mode-select:focus {
+  border-color: var(--primary);
 }
 
-.btn-format {
+.btn-main-export {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  background: var(--bg-page);
-  color: var(--text-main);
-  border: 1px solid var(--border);
-  padding: 6px 2px;
-  border-radius: var(--radius-sm);
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-format:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-.btn-primary-export {
+  gap: 6px;
   background: var(--primary);
   color: #ffffff;
-  border-color: var(--primary);
-  grid-column: span 1;
+  border: none;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(0, 168, 132, 0.3);
+  white-space: nowrap;
 }
 
-.btn-primary-export:hover {
+.btn-main-export:hover {
   background: var(--primary-hover);
-  color: #ffffff;
+  transform: translateY(-1px);
 }
 
-.btn-primary-export svg {
-  width: 12px;
-  height: 12px;
+.btn-main-export:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-main-export svg {
+  width: 14px;
+  height: 14px;
   fill: currentColor;
 }
 

@@ -97,7 +97,7 @@
     <!-- Secondary Filter Bar -->
     <div class="secondary-filters" id="secondary-filters">
       <select id="filter-country-select" class="filter-dropdown">
-        <option value="">All Countries 🌐</option>
+        <option value="">All Countries (All)</option>
       </select>
       <select id="filter-type-select" class="filter-dropdown">
         <option value="all">All Types</option>
@@ -122,32 +122,23 @@
       </div>
     </main>
 
-    <!-- Export Action Bar -->
+    <!-- Clean, Simple Export Footer: Dropdown Selector + 1 Big Export Button -->
     <footer class="export-footer">
-      <div class="export-header-row">
-        <span class="export-label">Quick Export:</span>
-        <div class="export-dropdown-wrapper">
-          <select id="export-mode-select" class="export-mode-select">
-            <option value="csv">CSV File (.csv)</option>
-            <option value="xlsx">Excel Spreadsheet (.xlsx / .xls)</option>
-            <option value="zip">ZIP Archive (Separate Group Files)</option>
-            <option value="vcf">vCard Contact (.vcf)</option>
-            <option value="google">Google Contacts CSV</option>
-            <option value="crm">CRM Lead Export</option>
-            <option value="txt">Plain Numbers (.txt)</option>
-            <option value="html">HTML Printable Report</option>
-            <option value="json">JSON Data (.json)</option>
-          </select>
-        </div>
-      </div>
-      <div class="format-buttons">
-        <button class="btn-format" data-format="csv" title="Standard CSV with UTF-8 BOM">CSV</button>
-        <button class="btn-format" data-format="xlsx" title="Formatted Excel Workbook">Excel</button>
-        <button class="btn-format" data-format="zip" title="ZIP Bundle for Groups">ZIP</button>
-        <button class="btn-format" data-format="vcf" title="vCard for Mobile Import">vCard</button>
-        <button class="btn-format btn-primary-export" id="btn-main-export" title="Export Selected Contacts">
+      <div class="export-controls-box">
+        <select id="export-mode-select" class="export-mode-select" title="Choose Export Format">
+          <option value="csv">CSV Spreadsheet (.csv)</option>
+          <option value="xlsx">Excel Workbook (.xls)</option>
+          <option value="vcf">vCard for Phone / iCloud (.vcf)</option>
+          <option value="google">Google Contacts Import (.csv)</option>
+          <option value="crm">CRM Lead Export (.csv)</option>
+          <option value="zip">ZIP Archive (Separate Group Files)</option>
+          <option value="txt">Plain Numbers List (.txt)</option>
+          <option value="html">HTML Printable Report (.html)</option>
+          <option value="json">JSON Data (.json)</option>
+        </select>
+        <button class="btn-main-export" id="btn-main-export">
           <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-          Download
+          <span id="btn-export-text">Export Now</span>
         </button>
       </div>
     </footer>

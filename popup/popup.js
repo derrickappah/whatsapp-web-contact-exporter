@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const exportModeSelect = document.getElementById('export-mode-select');
   const btnMainExport = document.getElementById('btn-main-export');
-  const formatButtons = document.querySelectorAll('.btn-format:not(.btn-primary-export)');
 
   // Settings & History Modal Elements
   const settingsModal = document.getElementById('settings-modal');
@@ -512,15 +511,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (selectedIds.has(i.phoneNumber || i.id)) selectedCount++;
     });
 
+    const btnExportText = document.getElementById('btn-export-text');
+    const itemType = currentTab === 'groups' ? 'Groups' : (currentTab === 'labels' ? 'Labels' : 'Contacts');
+
     if (visible.length === 0) {
       selectionSummary.textContent = '0 selected';
       chkSelectAll.checked = false;
+      if (btnExportText) btnExportText.textContent = 'Export (0)';
+      if (btnMainExport) btnMainExport.disabled = true;
     } else if (selectedCount === visible.length) {
       selectionSummary.textContent = `All ${visible.length} selected`;
       chkSelectAll.checked = true;
+      if (btnExportText) btnExportText.textContent = `Export (${visible.length} ${itemType})`;
+      if (btnMainExport) btnMainExport.disabled = false;
     } else {
       selectionSummary.textContent = `${selectedCount} of ${visible.length} selected`;
       chkSelectAll.checked = false;
+      if (btnExportText) btnExportText.textContent = selectedCount > 0 ? `Export (${selectedCount} ${itemType})` : 'Export (0)';
+      if (btnMainExport) btnMainExport.disabled = selectedCount === 0;
     }
   }
 
@@ -816,14 +824,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Refresh
     btnRefresh.addEventListener('click', loadData);
 
-    // Format buttons
-    formatButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const format = btn.getAttribute('data-format');
-        performExport(format);
-      });
-    });
-
+    // Export trigger
     btnMainExport.addEventListener('click', () => performExport());
 
     // Settings Modal
