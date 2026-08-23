@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         itemEl.className = 'group-item';
 
         const isChecked = selectedIds.has(g.id);
-        const memberText = (g.memberCount && g.memberCount > 0) ? `${g.memberCount} members` : 'Group';
+        const memberText = (g.memberCount && g.memberCount > 0) ? `${g.memberCount} members` : 'Loading...';
 
         itemEl.innerHTML = `
           <input type="checkbox" data-id="${g.id}" ${isChecked ? 'checked' : ''}>
@@ -426,8 +426,14 @@ document.addEventListener('DOMContentLoaded', async () => {
               g.memberCount = members.length;
               const badge = itemEl.querySelector(`[data-group-badge="${CSS.escape(g.id)}"]`);
               if (badge) badge.textContent = `${members.length} members`;
+            } else {
+              const badge = itemEl.querySelector(`[data-group-badge="${CSS.escape(g.id)}"]`);
+              if (badge) badge.textContent = 'Group';
             }
-          }).catch(() => {});
+          }).catch(() => {
+            const badge = itemEl.querySelector(`[data-group-badge="${CSS.escape(g.id)}"]`);
+            if (badge) badge.textContent = 'Group';
+          });
         }
 
         fragment.appendChild(itemEl);
@@ -462,6 +468,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const itemEl = document.createElement('div');
         itemEl.className = 'group-item';
         const isChecked = selectedIds.has(l.id);
+        const matchingCount = allContacts.filter(c => c.labels && (c.labels.includes(l.name) || c.labels.includes(l.id))).length;
+        const totalCount = Math.max(l.count || 0, matchingCount);
 
         itemEl.innerHTML = `
           <input type="checkbox" data-id="${l.id}" ${isChecked ? 'checked' : ''}>
@@ -469,7 +477,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="contact-info">
             <div class="contact-name-row">
               <span class="contact-name">${l.name}</span>
-              <span class="badge badge-role">${l.count || 0} chats</span>
+              <span class="badge badge-role">${totalCount} chats</span>
             </div>
             <span class="contact-details">Label ID: ${l.id}</span>
           </div>

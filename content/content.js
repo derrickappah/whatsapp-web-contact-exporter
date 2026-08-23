@@ -12,6 +12,9 @@
     if (typeof id === 'string') return id;
     if (id._serialized) return id._serialized;
     if (id.user && id.server) return `${id.user}@${id.server}`;
+    if (typeof id === 'object') {
+      if (id.id) return normalizeJid(id.id);
+    }
     return String(id);
   }
 
@@ -68,9 +71,22 @@
     };
   }
 
-  // Fast single-pass database read (only runs when popup requests data)
+  function readStoreAll(db, storeName) {
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => resolve([]);
+      } catch (e) {
+        resolve([]);
+      }
+    });
+  }
+
+  // Comprehensive on-demand database reader
   async function extractData(action, payload) {
-    let dbNames = ['wawc', 'model-storage'];
+    let dbNames = ['wawc', 'model-storage', 'wawc_db_enc'];
     if (indexedDB.databases) {
       try {
         const dbs = await indexedDB.databases();
@@ -94,37 +110,84 @@
           const storeNames = Array.from(db.objectStoreNames);
 
           // 1. Contacts store
-          const cStore = storeNames.find(s => s.toLowerCase().includes('contact'));
-          if (cStore) {
+          const contactStores = storeNames.filter(s => s.toLowerCase().includes('contact'));
+          for (const cStore of contactStores) {
             try {
               const items = await readStoreAll(db, cStore);
               items.forEach(item => {
                 const formatted = formatContact(item);
-                if (formatted) contactsMap.set(formatted.phoneNumber, formatted);
+                if (formatted) {
+                  if (!contactsMap.has(formatted.phoneNumber) || (formatted.savedName && !contactsMap.get(formatted.phoneNumber).savedName)) {
+                    contactsMap.set(formatted.phoneNumber, formatted);
+                  }
+                }
               });
             } catch (e) {}
           }
 
           // 2. Chats store
-          const chStore = storeNames.find(s => s.toLowerCase().includes('chat'));
-          if (chStore) {
+          const chatStores = storeNames.filter(s => s.toLowerCase().includes('chat'));
+          for (const chStore of chatStores) {
             try {
               const chats = await readStoreAll(db, chStore);
               chats.forEach(chat => {
                 const jid = normalizeJid(chat.id);
+                if (!jid) return;
+
                 if (jid.endsWith('@g.us')) {
                   const pCount = (chat.groupMetadata && Array.isArray(chat.groupMetadata.participants))
                     ? chat.groupMetadata.participants.length
-                    : (Array.isArray(chat.participants) ? chat.participants.length : 0);
+                    : (Array.isArray(chat.participants)
+                      ? chat.participants.length
+                      : (chat.groupMetadata?.size || chat.size || chat.participantCount || 0));
 
-                  if (!groupsMap.has(jid) || groupsMap.get(jid).memberCount === 0) {
+                  const groupName = chat.name || chat.formattedTitle || chat.subject || 'WhatsApp Group';
+
+                  if (!groupsMap.has(jid)) {
                     groupsMap.set(jid, {
                       id: jid,
-                      name: chat.name || chat.formattedTitle || 'WhatsApp Group',
+                      name: groupName,
                       memberCount: pCount,
                       timestamp: chat.t || 0
                     });
+                  } else {
+                    const existing = groupsMap.get(jid);
+                    if (pCount > existing.memberCount) existing.memberCount = pCount;
+                    if (groupName && groupName !== 'WhatsApp Group') existing.name = groupName;
                   }
+
+                  // If participants are present directly in chat
+                  const rawParticipants = chat.groupMetadata?.participants || chat.participants;
+                  if (Array.isArray(rawParticipants) && rawParticipants.length > 0) {
+                    const members = [];
+                    rawParticipants.forEach(p => {
+                      const pJid = normalizeJid(typeof p === 'string' ? p : (p?.id || p?.jid));
+                      const phone = cleanPhone(pJid.replace(/@.*$/, ''));
+                      if (!phone) return;
+                      const role = (p && p.isSuperAdmin) ? 'Super Admin' : ((p && p.isAdmin) ? 'Admin' : 'Member');
+                      const m = formatContact(p, groupName, role) || {
+                        id: pJid,
+                        jid: pJid,
+                        phoneNumber: phone,
+                        formattedNumber: `+${phone}`,
+                        savedName: (p && p.name && p.name !== phone) ? p.name : '',
+                        publicName: (p && p.pushname) ? p.pushname : '',
+                        displayName: (p && (p.name || p.pushname)) || `+${phone}`,
+                        isSaved: Boolean(p && p.name && p.name !== phone && !p.name.startsWith('+')),
+                        isBusiness: false,
+                        about: '',
+                        groupName,
+                        groupRole: role,
+                        labels: []
+                      };
+                      members.push(m);
+                    });
+                    if (members.length > 0) {
+                      groupMembersMap.set(jid, members);
+                      if (groupsMap.has(jid)) groupsMap.get(jid).memberCount = Math.max(groupsMap.get(jid).memberCount, members.length);
+                    }
+                  }
+
                 } else if (jid.endsWith('@c.us') || jid.endsWith('@s.whatsapp.net')) {
                   const phone = cleanPhone(jid.replace(/@.*$/, ''));
                   if (phone && !contactsMap.has(phone)) {
@@ -151,6 +214,7 @@
                   }
                 }
 
+                // Chat label associations
                 if (Array.isArray(chat.labels)) {
                   chat.labels.forEach(lblId => {
                     const lId = String(typeof lblId === 'object' ? (lblId.id || lblId.name) : lblId);
@@ -162,67 +226,81 @@
             } catch (e) {}
           }
 
-          // 3. Group metadata store
-          const gmStore = storeNames.find(s => s.toLowerCase().includes('group') || s.toLowerCase().includes('participant'));
-          if (gmStore) {
+          // 3. Group metadata & participant stores
+          const metaStores = storeNames.filter(s => s.toLowerCase().includes('group') || s.toLowerCase().includes('participant'));
+          for (const gmStore of metaStores) {
             try {
               const metas = await readStoreAll(db, gmStore);
               metas.forEach(meta => {
-                const groupJid = normalizeJid(meta.id);
-                if (!groupJid.endsWith('@g.us')) return;
+                const groupJid = normalizeJid(meta.id || meta.jid || meta.groupJid);
+                if (!groupJid || !groupJid.endsWith('@g.us')) return;
 
                 const groupName = meta.subject || meta.name || groupsMap.get(groupJid)?.name || 'WhatsApp Group';
-                const participants = meta.participants || meta.members || [];
+                const participants = meta.participants || meta.members || meta.participantList || [];
                 const members = [];
 
-                participants.forEach(p => {
-                  const pJid = normalizeJid(typeof p === 'string' ? p : (p?.id || p?.jid));
-                  const phone = cleanPhone(pJid.replace(/@.*$/, ''));
-                  if (!phone) return;
+                if (Array.isArray(participants)) {
+                  participants.forEach(p => {
+                    const pJid = normalizeJid(typeof p === 'string' ? p : (p?.id || p?.jid));
+                    const phone = cleanPhone(pJid.replace(/@.*$/, ''));
+                    if (!phone) return;
 
-                  const role = (p && p.isSuperAdmin) ? 'Super Admin' : ((p && p.isAdmin) ? 'Admin' : 'Member');
-                  const existing = contactsMap.get(phone);
+                    const role = (p && p.isSuperAdmin) ? 'Super Admin' : ((p && p.isAdmin) ? 'Admin' : 'Member');
+                    const existing = contactsMap.get(phone);
 
-                  if (existing) {
-                    members.push({ ...existing, groupName, groupRole: role });
-                  } else {
-                    const m = {
-                      id: pJid,
-                      jid: pJid,
-                      phoneNumber: phone,
-                      formattedNumber: `+${phone}`,
-                      savedName: (p && p.name && p.name !== phone) ? p.name : '',
-                      publicName: (p && p.pushname) ? p.pushname : '',
-                      displayName: (p && (p.name || p.pushname)) || `+${phone}`,
-                      isSaved: Boolean(p && p.name && p.name !== phone && !p.name.startsWith('+')),
-                      isBusiness: false,
-                      about: '',
-                      groupName,
-                      groupRole: role,
-                      labels: []
-                    };
-                    members.push(m);
-                    contactsMap.set(phone, m);
-                  }
-                });
+                    if (existing) {
+                      members.push({ ...existing, groupName, groupRole: role });
+                    } else {
+                      const m = {
+                        id: pJid,
+                        jid: pJid,
+                        phoneNumber: phone,
+                        formattedNumber: `+${phone}`,
+                        savedName: (p && p.name && p.name !== phone) ? p.name : '',
+                        publicName: (p && p.pushname) ? p.pushname : '',
+                        displayName: (p && (p.name || p.pushname)) || `+${phone}`,
+                        isSaved: Boolean(p && p.name && p.name !== phone && !p.name.startsWith('+')),
+                        isBusiness: false,
+                        about: '',
+                        groupName,
+                        groupRole: role,
+                        labels: []
+                      };
+                      members.push(m);
+                      contactsMap.set(phone, m);
+                    }
+                  });
+                }
 
-                groupMembersMap.set(groupJid, members);
-                groupsMap.set(groupJid, {
-                  id: groupJid,
-                  name: groupName,
-                  memberCount: members.length || participants.length,
-                  timestamp: meta.creation || 0
-                });
+                const totalCount = members.length || (Array.isArray(participants) ? participants.length : (meta.size || meta.participantCount || 0));
+
+                if (members.length > 0) {
+                  groupMembersMap.set(groupJid, members);
+                }
+
+                if (!groupsMap.has(groupJid)) {
+                  groupsMap.set(groupJid, {
+                    id: groupJid,
+                    name: groupName,
+                    memberCount: totalCount,
+                    timestamp: meta.creation || 0
+                  });
+                } else {
+                  const g = groupsMap.get(groupJid);
+                  if (totalCount > g.memberCount) g.memberCount = totalCount;
+                  if (groupName && groupName !== 'WhatsApp Group') g.name = groupName;
+                }
               });
             } catch (e) {}
           }
 
-          // 4. Labels store
-          const lStore = storeNames.find(s => s.toLowerCase().includes('label'));
-          if (lStore) {
+          // 4. Labels & label associations store
+          const labelStores = storeNames.filter(s => s.toLowerCase().includes('label'));
+          for (const lStore of labelStores) {
             try {
               const items = await readStoreAll(db, lStore);
               items.forEach(item => {
+                // Label definition
                 if (item.name && item.id !== undefined) {
                   const lId = String(item.id);
                   if (!labelsMap.has(lId)) {
@@ -234,7 +312,8 @@
                     });
                   }
                 }
-                if (item.labelId !== undefined || item.labeledId !== undefined || item.associationId !== undefined) {
+                // Association record
+                if (item.labelId !== undefined || item.labeledId !== undefined || item.associationId !== undefined || item.itemId !== undefined) {
                   const lId = String(item.labelId || item.parentId || item.id?.split('_')?.[0]);
                   const targetId = normalizeJid(item.labeledId || item.itemId || item.chatId || item.contactId || item.id?.split('_')?.[1]);
                   if (lId && targetId) {
@@ -250,14 +329,9 @@
           resolve(true);
         };
       });
-
-      // If primary db yielded contacts, don't scan other redundant databases
-      if (contactsMap.size > 0 && groupsMap.size > 0) {
-        break;
-      }
     }
 
-    // Update label counts
+    // Update label counts based on all discovered associations and contacts
     labelsMap.forEach(label => {
       const assoc = labelAssociations.get(label.id) || new Set();
       contactsMap.forEach(c => {
@@ -291,19 +365,6 @@
     if (action === 'GET_LABELS') return Array.from(labelsMap.values());
 
     return [];
-  }
-
-  function readStoreAll(db, storeName) {
-    return new Promise((resolve) => {
-      try {
-        const tx = db.transaction(storeName, 'readonly');
-        const req = tx.objectStore(storeName).getAll();
-        req.onsuccess = () => resolve(req.result || []);
-        req.onerror = () => resolve([]);
-      } catch (e) {
-        resolve([]);
-      }
-    });
   }
 
   // Handle on-demand RPC queries from extension popup
