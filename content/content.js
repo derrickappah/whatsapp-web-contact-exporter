@@ -250,6 +250,11 @@
           resolve(true);
         };
       });
+
+      // If primary db yielded contacts, don't scan other redundant databases
+      if (contactsMap.size > 0 && groupsMap.size > 0) {
+        break;
+      }
     }
 
     // Update label counts
@@ -262,6 +267,14 @@
       });
       label.count = Math.max(label.count || 0, assoc.size);
     });
+
+    if (action === 'GET_INITIAL_DATA') {
+      return {
+        contacts: Array.from(contactsMap.values()),
+        groups: Array.from(groupsMap.values()),
+        labels: Array.from(labelsMap.values())
+      };
+    }
 
     if (action === 'GET_ALL_CONTACTS') return Array.from(contactsMap.values());
     if (action === 'GET_GROUPS') return Array.from(groupsMap.values());

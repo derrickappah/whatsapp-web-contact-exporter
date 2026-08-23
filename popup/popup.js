@@ -149,18 +149,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     setStatus('warning', 'Connecting to WhatsApp...');
 
     try {
-      // 1. Fetch contacts, groups, labels in parallel
-      const [contactsData, groupsData, labelsData] = await Promise.all([
-        sendToContentScript('GET_ALL_CONTACTS').catch(() => []),
-        sendToContentScript('GET_GROUPS').catch(() => []),
-        sendToContentScript('GET_LABELS').catch(() => [])
-      ]);
+      // Single unified query to content script (10ms)
+      const initialData = await sendToContentScript('GET_INITIAL_DATA').catch(() => ({ contacts: [], groups: [], labels: [] }));
 
-      let rawContacts = contactsData || [];
-      groups = groupsData || [];
-      labels = labelsData || [];
+      let rawContacts = initialData.contacts || [];
+      groups = initialData.groups || [];
+      labels = initialData.labels || [];
 
-      // 2. Normalize and Deduplicate Contacts
+      // Normalize and Deduplicate Contacts
       const seen = new Set();
       allContacts = [];
       countryMap = new Map();
@@ -196,14 +192,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         countryGroup.contacts.push(c);
       });
 
-      // 3. Update Stats Counters
+      // Update Stats Counters
       const unsavedCount = allContacts.filter(c => !c.isSaved).length;
       statTotal.textContent = allContacts.length.toLocaleString();
       statUnsaved.textContent = unsavedCount.toLocaleString();
       statGroups.textContent = groups.length.toLocaleString();
       statCountries.textContent = countryMap.size.toLocaleString();
 
-      // 4. Populate Country Filter Dropdown
+      // Populate Country Filter Dropdown
       populateCountryFilter();
 
       setStatus('online', 'Connected to WhatsApp Web');
@@ -281,12 +277,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     return [];
   }
 
+  let renderedCount = 0;
+  const CHUNK_SIZE = 100;
+
   /**
-   * Render View
+   * Render View with Chunked DOM Rendering
    */
   function renderCurrentView() {
     const items = getFilteredItems();
     itemsList.innerHTML = '';
+    renderedCount = 0;
 
     if (items.length === 0) {
       itemsList.classList.add('hidden');
@@ -298,10 +298,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     emptyState.classList.add('hidden');
     itemsList.classList.remove('hidden');
 
+    renderNextChunk(items);
+    updateSelectionSummary();
+  }
+
+  function renderNextChunk(items) {
+    if (!items || renderedCount >= items.length) return;
+
+    const nextBatch = items.slice(renderedCount, renderedCount + CHUNK_SIZE);
+    renderedCount += nextBatch.length;
     const fragment = document.createDocumentFragment();
 
     if (currentTab === 'all' || currentTab === 'unsaved') {
-      items.forEach(c => {
+      nextBatch.forEach(c => {
         const itemEl = document.createElement('div');
         itemEl.className = 'contact-item';
 
@@ -334,7 +343,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
     } else if (currentTab === 'groups') {
-      items.forEach(g => {
+      nextBatch.forEach(g => {
         const itemEl = document.createElement('div');
         itemEl.className = 'group-item';
 
@@ -382,7 +391,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
     } else if (currentTab === 'countries') {
-      items.forEach(c => {
+      nextBatch.forEach(c => {
         const itemEl = document.createElement('div');
         itemEl.className = 'country-item';
         itemEl.innerHTML = `
@@ -406,7 +415,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
     } else if (currentTab === 'labels') {
-      items.forEach(l => {
+      nextBatch.forEach(l => {
         const itemEl = document.createElement('div');
         itemEl.className = 'group-item';
         const isChecked = selectedIds.has(l.id);
@@ -442,7 +451,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     itemsList.appendChild(fragment);
-    updateSelectionSummary();
   }
 
   function selectAllVisible() {
@@ -628,6 +636,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const targetBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
         if (targetBtn) targetBtn.click();
       });
+    });
+
+    // Infinite scroll listener for fast rendering
+    listContainer.addEventListener('scroll', () => {
+      if (listContainer.scrollTop + listContainer.clientHeight >= listContainer.scrollHeight - 80) {
+        renderNextChunk(getFilteredItems());
+      }
     });
 
     // Search input with debounce
