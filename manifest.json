@@ -35,24 +35,9 @@
         "https://web.whatsapp.com/*"
       ],
       "js": [
-        "lib/exporters.js",
         "content/content.js"
       ],
-      "css": [
-        "content/content.css"
-      ],
       "run_at": "document_idle"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "content/page-script.js",
-        "lib/exporters.js"
-      ],
-      "matches": [
-        "https://web.whatsapp.com/*"
-      ]
     }
   ]
 }
