@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WhatsApp Web Contact & Group Exporter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Export all contacts, unsaved chat numbers, and group participants from WhatsApp Web to CSV, Excel, vCard, and JSON.",
   "icons": {
     "16": "icons/icon16.png",
@@ -11,7 +11,6 @@
   },
   "permissions": [
     "storage",
-    "downloads",
     "activeTab"
   ],
   "host_permissions": [
