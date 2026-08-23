@@ -59,6 +59,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   let isMasked = false;
   let userSettings = {};
   let searchTimeout = null;
+  let renderedCount = 0;
+  const CHUNK_SIZE = 100;
 
   // Initialize
   await initSettings();
@@ -276,9 +278,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     return [];
   }
-
-  let renderedCount = 0;
-  const CHUNK_SIZE = 100;
 
   /**
    * Render View with Chunked DOM Rendering
