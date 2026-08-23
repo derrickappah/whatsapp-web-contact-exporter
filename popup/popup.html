@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WhatsApp Web Contact Exporter</title>
+  <title>WhatsApp Web Exporter Pro</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -17,19 +17,33 @@
           </svg>
         </div>
         <div class="title-group">
-          <h1>WA Exporter Pro</h1>
+          <div class="title-row">
+            <h1>WA Exporter Pro</h1>
+            <span class="version-tag">v2.0</span>
+          </div>
           <div class="status-badge" id="status-indicator">
             <span class="status-dot dot-offline"></span>
             <span id="status-text">Checking WhatsApp Web...</span>
           </div>
         </div>
       </div>
-      <button class="btn-icon" id="btn-refresh" title="Refresh Contacts">
-        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-      </button>
+      <div class="header-actions">
+        <button class="btn-icon" id="btn-mask" title="Toggle Privacy Number Masking">
+          <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+        </button>
+        <button class="btn-icon" id="btn-copy-all" title="Copy Selected Numbers to Clipboard">
+          <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+        </button>
+        <button class="btn-icon" id="btn-settings" title="Export Settings">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        </button>
+        <button class="btn-icon" id="btn-refresh" title="Refresh Data">
+          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        </button>
+      </div>
     </header>
 
-    <!-- Not connected banner -->
+    <!-- Banner -->
     <div class="banner-notice hidden" id="banner-not-connected">
       <p>Please open or refresh <a href="https://web.whatsapp.com" target="_blank">web.whatsapp.com</a> to start exporting.</p>
     </div>
@@ -42,27 +56,32 @@
       </div>
       <div class="stat-card" data-tab="unsaved">
         <span class="stat-num text-accent" id="stat-unsaved">0</span>
-        <span class="stat-title">Unsaved Numbers</span>
+        <span class="stat-title">Unsaved Leads</span>
       </div>
       <div class="stat-card" data-tab="groups">
         <span class="stat-num" id="stat-groups">0</span>
         <span class="stat-title">Groups</span>
       </div>
+      <div class="stat-card" data-tab="countries">
+        <span class="stat-num" id="stat-countries">0</span>
+        <span class="stat-title">Countries</span>
+      </div>
     </div>
 
-    <!-- Tabs Navigation -->
+    <!-- Navigation Tabs -->
     <nav class="nav-tabs">
       <button class="tab-btn active" data-tab="all">All Contacts</button>
-      <button class="tab-btn" data-tab="unsaved">Unsaved Numbers</button>
+      <button class="tab-btn" data-tab="unsaved">Unsaved Leads</button>
       <button class="tab-btn" data-tab="groups">Group Chats</button>
+      <button class="tab-btn" data-tab="countries">Countries</button>
       <button class="tab-btn" data-tab="labels">Labels</button>
     </nav>
 
-    <!-- Controls & Search Bar -->
+    <!-- Search & Filter Controls -->
     <div class="controls-bar">
       <div class="search-wrapper">
         <svg viewBox="0 0 24 24" class="search-icon"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        <input type="text" id="search-input" placeholder="Search by name, number, group...">
+        <input type="text" id="search-input" placeholder="Search name, phone, country, group...">
       </div>
       <div class="selection-actions">
         <label class="select-all-label">
@@ -72,14 +91,28 @@
       </div>
     </div>
 
+    <!-- Secondary Filter Bar -->
+    <div class="secondary-filters" id="secondary-filters">
+      <select id="filter-country-select" class="filter-dropdown">
+        <option value="">All Countries 🌐</option>
+      </select>
+      <select id="filter-type-select" class="filter-dropdown">
+        <option value="all">All Types</option>
+        <option value="saved">Saved Only</option>
+        <option value="unsaved">Unsaved Only</option>
+        <option value="business">Business Accounts</option>
+      </select>
+      <button class="btn-text-small" id="btn-reset-filters">Reset</button>
+    </div>
+
     <!-- Main List Preview Container -->
     <main class="list-container" id="list-container">
       <div class="loading-state" id="loading-spinner">
         <div class="spinner"></div>
-        <p>Loading WhatsApp data...</p>
+        <p>Reading WhatsApp data...</p>
       </div>
       <div class="items-list hidden" id="items-list">
-        <!-- Rendered items go here -->
+        <!-- Rendered items -->
       </div>
       <div class="empty-state hidden" id="empty-state">
         <p>No matching contacts found.</p>
@@ -88,30 +121,79 @@
 
     <!-- Export Action Bar -->
     <footer class="export-footer">
-      <div class="export-options">
-        <span class="export-label">Export Format:</span>
-        <div class="format-buttons">
-          <button class="btn-format" data-format="csv" title="Export as CSV (Excel compatible)">
-            <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-            CSV
-          </button>
-          <button class="btn-format" data-format="xlsx" title="Export as Excel Workbook">
-            <svg viewBox="0 0 24 24"><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 15H3.5V9H7M15.5 17.5V14.5H12V17.5M15.5 13V10.5H12V13M15.5 9.5V6.5H12V9.5M20.5 17.5V14.5H17V17.5M20.5 13V10.5H17V13M20.5 9.5V6.5H17V9.5Z"/></svg>
-            Excel
-          </button>
-          <button class="btn-format" data-format="vcf" title="Export as vCard for Phone Import">
-            <svg viewBox="0 0 24 24"><path d="M20 0H4v2h16V0zM4 24h16v-2H4v2zM20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 2.75c1.24 0 2.25 1.01 2.25 2.25s-1.01 2.25-2.25 2.25S9.75 10.24 9.75 9 10.76 6.75 12 6.75zM17 17H7v-1.5c0-1.67 3.33-2.5 5-2.5s5 .83 5 2.5V17z"/></svg>
-            vCard (.vcf)
-          </button>
-          <button class="btn-format" data-format="json" title="Export as structured JSON">
-            <svg viewBox="0 0 24 24"><path d="M5 3h2v2H5v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5h2v2H5c-1.1 0-2-.9-2-2v-4a2 2 0 0 0-2-2v-2a2 2 0 0 0 2-2V5c0-1.1.9-2 2-2zm14 0c1.1 0 2 .9 2 2v4a2 2 0 0 0 2 2v2a2 2 0 0 0-2 2v4c0 1.1-.9 2-2 2h-2v-2h2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5h-2V3h2z"/></svg>
-            JSON
-          </button>
+      <div class="export-header-row">
+        <span class="export-label">Quick Export:</span>
+        <div class="export-dropdown-wrapper">
+          <select id="export-mode-select" class="export-mode-select">
+            <option value="csv">CSV File (.csv)</option>
+            <option value="xlsx">Excel Spreadsheet (.xlsx / .xls)</option>
+            <option value="vcf">vCard Contact (.vcf)</option>
+            <option value="google">Google Contacts CSV</option>
+            <option value="crm">CRM Lead Export</option>
+            <option value="txt">Plain Numbers (.txt)</option>
+            <option value="html">HTML Printable Report</option>
+            <option value="json">JSON Data (.json)</option>
+          </select>
         </div>
+      </div>
+      <div class="format-buttons">
+        <button class="btn-format" data-format="csv" title="Standard CSV with UTF-8 BOM">CSV</button>
+        <button class="btn-format" data-format="xlsx" title="Formatted Excel Workbook">Excel</button>
+        <button class="btn-format" data-format="vcf" title="vCard for Mobile Import">vCard</button>
+        <button class="btn-format" data-format="google" title="Google Contacts Import Format">Google</button>
+        <button class="btn-format btn-primary-export" id="btn-main-export" title="Export Selected Contacts">
+          <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          Download
+        </button>
       </div>
     </footer>
   </div>
 
+  <!-- Settings Modal -->
+  <div class="modal-backdrop hidden" id="settings-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>⚙️ Exporter Settings & Privacy</h3>
+        <button class="btn-modal-close" id="btn-close-settings">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-item">
+          <label class="setting-title">Default Delimiter</label>
+          <select id="setting-delimiter" class="setting-input">
+            <option value=",">Comma (,)</option>
+            <option value=";">Semicolon (;)</option>
+            <option value="&#9;">Tab (\t)</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label class="setting-checkbox-label">
+            <input type="checkbox" id="setting-auto-dedupe" checked>
+            <span>Auto-Deduplicate matching phone numbers</span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <label class="setting-checkbox-label">
+            <input type="checkbox" id="setting-privacy-mask">
+            <span>Enable screen privacy mask by default</span>
+          </label>
+        </div>
+        <div class="privacy-box">
+          <strong>🔒 100% Client-Side Privacy Guarantee</strong>
+          <p>This extension runs entirely in your local browser. No data, phone numbers, or metadata are ever transmitted to any external server.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-save-settings" id="btn-save-settings">Save Preferences</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-popup" id="toast-popup"></div>
+
+  <script src="../lib/countries.js"></script>
+  <script src="../lib/phone-utils.js"></script>
+  <script src="../lib/storage.js"></script>
   <script src="../lib/exporters.js"></script>
   <script src="popup.js"></script>
 </body>
