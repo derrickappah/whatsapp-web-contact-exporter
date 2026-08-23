@@ -158,21 +158,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /**
-   * Query WhatsApp Web active tab
+   * Query WhatsApp Web active tab with strict 3-second timeout
    */
   async function sendToContentScript(action, payload = {}) {
     return new Promise((resolve, reject) => {
+      let isDone = false;
+      const timeout = setTimeout(() => {
+        if (!isDone) {
+          isDone = true;
+          resolve({ contacts: [], groups: [], labels: [] });
+        }
+      }, 3000);
+
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (!tabs || !tabs[0] || !tabs[0].id) {
-          return reject(new Error('No active WhatsApp Web tab found'));
+          clearTimeout(timeout);
+          if (!isDone) { isDone = true; reject(new Error('No active WhatsApp Web tab found')); }
+          return;
         }
 
         const tab = tabs[0];
         if (!tab.url || !tab.url.includes('web.whatsapp.com')) {
-          return reject(new Error('Please open WhatsApp Web (web.whatsapp.com)'));
+          clearTimeout(timeout);
+          if (!isDone) { isDone = true; reject(new Error('Please open WhatsApp Web (web.whatsapp.com)')); }
+          return;
         }
 
         chrome.tabs.sendMessage(tab.id, { action, payload }, (response) => {
+          clearTimeout(timeout);
+          if (isDone) return;
+          isDone = true;
+
           if (chrome.runtime.lastError) {
             return reject(new Error(chrome.runtime.lastError.message || 'Connection failed'));
           }
