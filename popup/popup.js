@@ -158,39 +158,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /**
-   * Query WhatsApp Web active tab with strict 3-second timeout
+   * Query WhatsApp Web active tab
    */
   async function sendToContentScript(action, payload = {}) {
     return new Promise((resolve, reject) => {
-      let isDone = false;
-      const timeout = setTimeout(() => {
-        if (!isDone) {
-          isDone = true;
-          resolve({ contacts: [], groups: [], labels: [] });
-        }
-      }, 3000);
-
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (!tabs || !tabs[0] || !tabs[0].id) {
-          clearTimeout(timeout);
-          if (!isDone) { isDone = true; reject(new Error('No active WhatsApp Web tab found')); }
-          return;
+          return reject(new Error('No active WhatsApp Web tab found'));
         }
 
         const tab = tabs[0];
         if (!tab.url || !tab.url.includes('web.whatsapp.com')) {
-          clearTimeout(timeout);
-          if (!isDone) { isDone = true; reject(new Error('Please open WhatsApp Web (web.whatsapp.com)')); }
-          return;
+          return reject(new Error('Please open WhatsApp Web (web.whatsapp.com)'));
         }
 
         chrome.tabs.sendMessage(tab.id, { action, payload }, (response) => {
-          clearTimeout(timeout);
-          if (isDone) return;
-          isDone = true;
-
           if (chrome.runtime.lastError) {
-            return reject(new Error(chrome.runtime.lastError.message || 'Connection failed'));
+            return reject(new Error(chrome.runtime.lastError.message || 'Connection failed. Please refresh web.whatsapp.com'));
           }
           if (response && response.success) {
             resolve(response.data);
@@ -212,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setStatus('warning', 'Connecting to WhatsApp...');
 
     try {
-      const initialData = await sendToContentScript('GET_INITIAL_DATA').catch(() => ({ contacts: [], groups: [], labels: [] }));
+      const initialData = await sendToContentScript('GET_INITIAL_DATA');
 
       let rawContacts = initialData.contacts || [];
       groups = initialData.groups || [];
