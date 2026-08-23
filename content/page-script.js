@@ -396,59 +396,58 @@
   }
 
   /**
-   * Resolve any pending/unloaded groups
+   * Resolve metadata for a single specific group on-demand
    */
-  async function resolvePendingGroups() {
+  async function resolveSingleGroup(groupJid) {
+    if (!groupJid) return;
     initWebpack();
+    const group = State.groups.get(groupJid);
+    const groupName = group?.name || 'Group';
 
-    for (const [jid, group] of State.groups.entries()) {
-      if (!group.memberCount || group.memberCount === 0 || !State.groupMembers.has(jid)) {
-        try {
-          // 1. Try Chat model
-          if (State.chatCollection && typeof State.chatCollection.get === 'function') {
-            const chat = State.chatCollection.get(jid);
-            if (chat && chat.groupMetadata) {
-              if (typeof chat.groupMetadata.load === 'function' && (!chat.groupMetadata.participants || chat.groupMetadata.participants.length === 0)) {
-                await chat.groupMetadata.load().catch(() => {});
-              }
-              const participants = chat.groupMetadata.participants ? (chat.groupMetadata.participants._models || chat.groupMetadata.participants.models || chat.groupMetadata.participants) : [];
-              if (participants && participants.length > 0) {
-                processParticipants(jid, group.name, participants);
-                continue;
-              }
-            }
+    try {
+      // 1. Try Chat model
+      if (State.chatCollection && typeof State.chatCollection.get === 'function') {
+        const chat = State.chatCollection.get(groupJid);
+        if (chat && chat.groupMetadata) {
+          if (typeof chat.groupMetadata.load === 'function' && (!chat.groupMetadata.participants || chat.groupMetadata.participants.length === 0)) {
+            await chat.groupMetadata.load().catch(() => {});
           }
-
-          // 2. Try findGroupMetadata function
-          if (typeof State.findGroupMetaFn === 'function') {
-            const meta = await State.findGroupMetaFn(jid).catch(() => null);
-            if (meta && meta.participants) {
-              const participants = meta.participants._models || meta.participants.models || meta.participants;
-              if (participants && participants.length > 0) {
-                processParticipants(jid, group.name, participants);
-                continue;
-              }
-            }
+          const participants = chat.groupMetadata.participants ? (chat.groupMetadata.participants._models || chat.groupMetadata.participants.models || chat.groupMetadata.participants) : [];
+          if (participants && participants.length > 0) {
+            processParticipants(groupJid, groupName, participants);
+            return;
           }
-
-          // 3. Try GroupMetadataCollection
-          if (State.groupMetadataCollection && typeof State.groupMetadataCollection.find === 'function') {
-            const meta = await State.groupMetadataCollection.find(jid).catch(() => null);
-            if (meta && meta.participants) {
-              const participants = meta.participants._models || meta.participants.models || meta.participants;
-              if (participants && participants.length > 0) {
-                processParticipants(jid, group.name, participants);
-                continue;
-              }
-            }
-          }
-        } catch (e) {}
+        }
       }
-    }
+
+      // 2. Try findGroupMetadata function
+      if (typeof State.findGroupMetaFn === 'function') {
+        const meta = await State.findGroupMetaFn(groupJid).catch(() => null);
+        if (meta && meta.participants) {
+          const participants = meta.participants._models || meta.participants.models || meta.participants;
+          if (participants && participants.length > 0) {
+            processParticipants(groupJid, groupName, participants);
+            return;
+          }
+        }
+      }
+
+      // 3. Try GroupMetadataCollection
+      if (State.groupMetadataCollection && typeof State.groupMetadataCollection.find === 'function') {
+        const meta = await State.groupMetadataCollection.find(groupJid).catch(() => null);
+        if (meta && meta.participants) {
+          const participants = meta.participants._models || meta.participants.models || meta.participants;
+          if (participants && participants.length > 0) {
+            processParticipants(groupJid, groupName, participants);
+            return;
+          }
+        }
+      }
+    } catch (e) {}
   }
 
   /**
-   * Synchronize all data
+   * Synchronize all data on demand
    */
   async function syncAllData() {
     await extractFromIndexedDB();
@@ -491,11 +490,9 @@
   }
 
   /**
-   * Get Group Members for a specific group only
+   * Get Group Members for a specific group only (on demand)
    */
   async function getGroupMembers(groupJid) {
-    await syncAllData();
-
     if (!groupJid) {
       const active = getActiveChat();
       if (active && active.isGroup) {
@@ -503,15 +500,11 @@
       }
     }
 
-    if (!groupJid) {
-      return [];
-    }
-
+    if (!groupJid) return [];
     const cleanGroupJid = normalizeJid(groupJid);
 
-    // Try resolving pending metadata if not cached yet
     if (!State.groupMembers.has(cleanGroupJid) || State.groupMembers.get(cleanGroupJid).length === 0) {
-      await resolvePendingGroups();
+      await resolveSingleGroup(cleanGroupJid);
     }
 
     if (State.groupMembers.has(cleanGroupJid)) {
@@ -519,7 +512,6 @@
       if (members.length > 0) return members;
     }
 
-    // Try matching by raw user id or partial JID
     const userPart = cleanGroupJid.replace(/@.*$/, '');
     for (const [jid, list] of State.groupMembers.entries()) {
       if (jid === cleanGroupJid || jid.includes(userPart)) {
@@ -527,7 +519,6 @@
       }
     }
 
-    // Strictly return empty array if this group has no resolved participants yet
     return [];
   }
 
@@ -540,7 +531,10 @@
     const { action, requestId, payload } = data;
 
     try {
-      await syncAllData();
+      if (action !== 'PING') {
+        await syncAllData();
+      }
+
       let responseData = null;
 
       switch (action) {
@@ -553,7 +547,6 @@
           break;
 
         case 'GET_GROUPS':
-          await resolvePendingGroups();
           responseData = Array.from(State.groups.values());
           break;
 
@@ -589,10 +582,6 @@
         error: err.message || 'Operation failed'
       }, '*');
     }
-  });
-
-  syncAllData().then(() => {
-    resolvePendingGroups().catch(() => {});
   });
 
 })();

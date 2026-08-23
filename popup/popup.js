@@ -132,9 +132,6 @@
       selectAllVisible();
       renderCurrentView();
 
-      // Proactively resolve any groups with 0 member count
-      resolveMissingGroupCounts();
-
     } catch (err) {
       console.error('[Popup] Load error:', err);
       setStatus('offline', 'Could not read WhatsApp data');
@@ -142,25 +139,6 @@
       emptyState.innerHTML = `<p style="color:#ea0038;">Error: ${err.message}</p><p style="margin-top:6px;font-size:11px;">Make sure WhatsApp Web is open and fully loaded.</p>`;
     } finally {
       loadingSpinner.classList.add('hidden');
-    }
-  }
-
-  /**
-   * Background resolver for groups missing member counts
-   */
-  async function resolveMissingGroupCounts() {
-    const uncounted = groups.filter(g => !g.memberCount || g.memberCount === 0);
-    for (const g of uncounted) {
-      try {
-        const members = await sendToContentScript('GET_GROUP_MEMBERS', { groupJid: g.id });
-        if (members && members.length > 0) {
-          g.memberCount = members.length;
-          const badge = document.querySelector(`[data-group-badge="${CSS.escape(g.id)}"]`);
-          if (badge) {
-            badge.textContent = `${members.length} members`;
-          }
-        }
-      } catch (e) {}
     }
   }
 
