@@ -1,0 +1,316 @@
+/* WhatsApp Web Exporter - Injected Styles */
+
+:root {
+  --wae-primary: #25d366;
+  --wae-primary-dark: #128c7e;
+  --wae-teal: #075e54;
+  --wae-bg: #ffffff;
+  --wae-bg-secondary: #f0f2f5;
+  --wae-text: #111b21;
+  --wae-text-muted: #667781;
+  --wae-border: #e9edef;
+  --wae-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  --wae-accent: #00a884;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark), .dark {
+  :root {
+    --wae-bg: #202c33;
+    --wae-bg-secondary: #111b21;
+    --wae-text: #e9edef;
+    --wae-text-muted: #8696a0;
+    --wae-border: #2a3942;
+    --wae-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Floating Action Button (FAB) */
+
+/* Floating Action Button (FAB) */
+.wae-fab-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.wae-fab-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.wae-fab-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+}
+
+.wae-fab-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+/* In-Page Quick Modal */
+.wae-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.wae-modal-backdrop.wae-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.wae-modal-card {
+  width: 480px;
+  max-width: 90vw;
+  background: var(--wae-bg);
+  color: var(--wae-text);
+  border-radius: 16px;
+  box-shadow: var(--wae-shadow);
+  border: 1px solid var(--wae-border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.25s ease;
+}
+
+.wae-modal-backdrop.wae-open .wae-modal-card {
+  transform: scale(1) translateY(0);
+}
+
+.wae-modal-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--wae-border);
+  background: var(--wae-bg-secondary);
+}
+
+.wae-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--wae-text);
+}
+
+.wae-modal-title svg {
+  fill: var(--wae-accent);
+  width: 22px;
+  height: 22px;
+}
+
+.wae-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--wae-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.wae-modal-close:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--wae-text);
+}
+
+.wae-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wae-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wae-option-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--wae-text-muted);
+  letter-spacing: 0.5px;
+}
+
+.wae-select, .wae-radio-group {
+  width: 100%;
+}
+
+.wae-radio-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.wae-radio-card {
+  border: 1.5px solid var(--wae-border);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s, background 0.2s;
+  background: var(--wae-bg);
+}
+
+.wae-radio-card:hover {
+  border-color: var(--wae-accent);
+}
+
+.wae-radio-card.selected {
+  border-color: var(--wae-accent);
+  background: rgba(0, 168, 132, 0.08);
+}
+
+.wae-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wae-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wae-card-desc {
+  font-size: 12px;
+  color: var(--wae-text-muted);
+  line-height: 1.3;
+}
+
+/* Format buttons */
+.wae-formats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.wae-format-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 6px;
+  border-radius: 8px;
+  border: 1.5px solid var(--wae-border);
+  background: var(--wae-bg);
+  color: var(--wae-text);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wae-format-btn:hover {
+  border-color: var(--wae-accent);
+  color: var(--wae-accent);
+  transform: translateY(-2px);
+}
+
+.wae-format-btn.active {
+  border-color: var(--wae-accent);
+  background: var(--wae-accent);
+  color: #ffffff;
+}
+
+.wae-btn-primary {
+  width: 100%;
+  background: var(--wae-accent);
+  color: #ffffff;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s, opacity 0.2s;
+  box-shadow: 0 3px 10px rgba(0, 168, 132, 0.3);
+}
+
+.wae-btn-primary:hover {
+  background: #008f6f;
+}
+
+.wae-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Toast Notifications */
+.wae-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(50px);
+  background: #111b21;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000000;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.wae-toast.wae-show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.wae-toast.success {
+  border-left: 4px solid var(--wae-primary);
+}
+
+.wae-toast.error {
+  border-left: 4px solid #ea0038;
+}
