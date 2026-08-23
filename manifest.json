@@ -17,6 +17,9 @@
   "host_permissions": [
     "https://web.whatsapp.com/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https:;"
+  },
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {

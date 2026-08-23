@@ -345,6 +345,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateSelectionSummary();
   }
 
+  function getCountryFlagHtml(iso, name = '') {
+    if (!iso || iso === 'XX' || iso.length !== 2) {
+      return '<span class="country-pill">🌐</span>';
+    }
+    const isoLower = iso.toLowerCase();
+    return `<img class="country-flag-img" src="https://flagcdn.com/w40/${isoLower}.png" srcset="https://flagcdn.com/w80/${isoLower}.png 2x" width="17" height="12" alt="${name || iso}" onerror="this.outerHTML='<span class=\\'country-pill\\'>${iso}</span>'">`;
+  }
+
+  function getCountryFlagLargeHtml(iso, name = '') {
+    if (!iso || iso === 'XX' || iso.length !== 2) {
+      return '<span style="font-size:14px;">🌐</span>';
+    }
+    const isoLower = iso.toLowerCase();
+    return `<img class="country-flag-large" src="https://flagcdn.com/w40/${isoLower}.png" srcset="https://flagcdn.com/w80/${isoLower}.png 2x" width="22" height="15" alt="${name || iso}" onerror="this.outerHTML='<span class=\\'country-pill\\'>${iso}</span>'">`;
+  }
+
   function renderNextChunk(items) {
     if (!items || renderedCount >= items.length) return;
 
@@ -361,7 +377,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isChecked = selectedIds.has(id);
         const initial = (c.displayName || c.phoneNumber || '?').charAt(0).toUpperCase();
         const displayPhone = isMasked && window.WAPhoneUtils ? window.WAPhoneUtils.maskPhone(c.phoneNumber) : (c.formattedNumber || `+${c.phoneNumber}`);
-        const countryBadge = (c.countryIso && c.countryIso !== 'XX') ? `<span class="country-pill">${c.countryIso}</span>` : '';
+        const flagHtml = getCountryFlagHtml(c.countryIso, c.countryName);
 
         itemEl.innerHTML = `
           <input type="checkbox" data-id="${id}" ${isChecked ? 'checked' : ''}>
@@ -372,7 +388,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               ${c.isSaved ? '<span class="badge badge-saved">Saved</span>' : '<span class="badge badge-unsaved">Unsaved</span>'}
               ${c.isBusiness ? '<span class="badge badge-role">Biz</span>' : ''}
             </div>
-            <span class="contact-details">${countryBadge} ${displayPhone} • ${c.countryName || 'Global'} ${c.about ? '• ' + c.about : ''}</span>
+            <span class="contact-details">${flagHtml} ${displayPhone} • ${c.countryName || 'Global'} ${c.about ? '• ' + c.about : ''}</span>
           </div>
         `;
 
@@ -443,8 +459,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       nextBatch.forEach(c => {
         const itemEl = document.createElement('div');
         itemEl.className = 'country-item';
+        const flagLarge = getCountryFlagLargeHtml(c.iso, c.name);
+
         itemEl.innerHTML = `
-          <div class="contact-avatar country-iso-avatar">${c.iso}</div>
+          <div class="contact-avatar country-flag-avatar">${flagLarge}</div>
           <div class="contact-info">
             <div class="contact-name-row">
               <span class="contact-name">${c.name}</span>
