@@ -486,8 +486,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const itemEl = document.createElement('div');
         itemEl.className = 'group-item';
         const isChecked = selectedIds.has(l.id);
-        const matchingCount = allContacts.filter(c => c.labels && (c.labels.includes(l.name) || c.labels.includes(l.id))).length;
-        const totalCount = Math.max(l.count || 0, matchingCount);
+        const contactMatches = allContacts.filter(c => c.labels && (c.labels.includes(l.name) || c.labels.includes(l.id))).length;
+        const groupMatches = groups.filter(g => g.labels && (g.labels.includes(l.name) || g.labels.includes(l.id))).length;
+        const totalCount = Math.max(l.count || 0, contactMatches + groupMatches);
 
         itemEl.innerHTML = `
           <input type="checkbox" data-id="${l.id}" ${isChecked ? 'checked' : ''}>
@@ -510,9 +511,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         const quickExportBtn = itemEl.querySelector('.btn-quick-export');
-        quickExportBtn.addEventListener('click', () => {
-          const labeled = allContacts.filter(c => c.labels && (c.labels.includes(l.name) || c.labels.includes(l.id)));
-          exportContactsList(labeled, `label_${l.name.toLowerCase()}_contacts`);
+        quickExportBtn.addEventListener('click', async () => {
+          const labeledContacts = allContacts.filter(c => c.labels && (c.labels.includes(l.name) || c.labels.includes(l.id)));
+          const labeledGroups = groups.filter(g => g.labels && (g.labels.includes(l.name) || g.labels.includes(l.id)));
+          
+          let target = [...labeledContacts];
+          for (const g of labeledGroups) {
+            const members = await sendToContentScript('GET_GROUP_MEMBERS', { groupJid: g.id }).catch(() => []);
+            target = target.concat(members);
+          }
+
+          if (target.length === 0) {
+            showToast(`No contacts currently associated with label "${l.name}"`);
+            return;
+          }
+
+          exportContactsList(target, `label_${l.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}_contacts`);
         });
 
         fragment.appendChild(itemEl);

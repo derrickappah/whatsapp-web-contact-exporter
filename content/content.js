@@ -1,5 +1,5 @@
 /**
- * WhatsApp Web Exporter - Content Script (v2.1.6)
+ * WhatsApp Web Exporter - Content Script (v2.1.7)
  * Multi-Database Store Extractor with Accurate Label Associations & Chat Counts
  */
 
@@ -130,8 +130,15 @@
                 items.forEach(item => {
                   const formatted = formatContact(item);
                   if (formatted) {
-                    if (!contactsMap.has(formatted.phoneNumber) || (formatted.savedName && !contactsMap.get(formatted.phoneNumber).savedName)) {
+                    if (!contactsMap.has(formatted.phoneNumber)) {
                       contactsMap.set(formatted.phoneNumber, formatted);
+                    } else {
+                      const existing = contactsMap.get(formatted.phoneNumber);
+                      if (formatted.savedName && !existing.savedName) existing.savedName = formatted.savedName;
+                      if (formatted.displayName && formatted.displayName !== existing.phoneNumber) existing.displayName = formatted.displayName;
+                      if (Array.isArray(formatted.labels) && formatted.labels.length > 0) {
+                        existing.labels = Array.from(new Set([...existing.labels, ...formatted.labels]));
+                      }
                     }
                   }
                 });
@@ -147,6 +154,9 @@
                   const jid = normalizeJid(chat.id || chat.jid);
                   if (!jid) return;
 
+                  const rawChatLabels = chat.labels || chat.labelIds || chat.labelList || (chat.label !== undefined ? [chat.label] : []);
+                  const chatLabels = Array.isArray(rawChatLabels) ? rawChatLabels.map(l => (typeof l === 'object' ? (l.name || l.id) : String(l))).filter(Boolean) : [];
+
                   if (jid.endsWith('@g.us')) {
                     const pCount = (chat.groupMetadata && Array.isArray(chat.groupMetadata.participants))
                       ? chat.groupMetadata.participants.length
@@ -161,12 +171,14 @@
                         id: jid,
                         name: groupName,
                         memberCount: pCount,
-                        timestamp: chat.t || 0
+                        timestamp: chat.t || 0,
+                        labels: chatLabels
                       });
                     } else {
                       const g = groupsMap.get(jid);
                       if (pCount > g.memberCount) g.memberCount = pCount;
                       if (groupName && groupName !== 'WhatsApp Group') g.name = groupName;
+                      if (chatLabels.length > 0) g.labels = Array.from(new Set([...(g.labels || []), ...chatLabels]));
                     }
 
                     // Extract inlined participants if present in chat
@@ -203,41 +215,51 @@
 
                   } else if (jid.endsWith('@c.us') || jid.endsWith('@s.whatsapp.net')) {
                     const phone = cleanPhone(jid.replace(/@.*$/, ''));
-                    if (phone && !contactsMap.has(phone)) {
-                      const formatted = formatContact(chat);
-                      if (formatted) {
-                        contactsMap.set(phone, formatted);
+                    if (phone) {
+                      if (!contactsMap.has(phone)) {
+                        const formatted = formatContact(chat);
+                        if (formatted) {
+                          if (chatLabels.length > 0) formatted.labels = Array.from(new Set([...formatted.labels, ...chatLabels]));
+                          contactsMap.set(phone, formatted);
+                        } else {
+                          contactsMap.set(phone, {
+                            id: jid,
+                            jid: jid,
+                            phoneNumber: phone,
+                            formattedNumber: `+${phone}`,
+                            savedName: (chat.name && chat.name !== phone) ? chat.name : '',
+                            publicName: '',
+                            displayName: chat.name || chat.formattedTitle || `+${phone}`,
+                            isSaved: Boolean(chat.name && chat.name !== phone && !chat.name.startsWith('+')),
+                            isBusiness: false,
+                            about: '',
+                            groupName: '',
+                            groupRole: '',
+                            labels: chatLabels
+                          });
+                        }
                       } else {
-                        contactsMap.set(phone, {
-                          id: jid,
-                          jid: jid,
-                          phoneNumber: phone,
-                          formattedNumber: `+${phone}`,
-                          savedName: (chat.name && chat.name !== phone) ? chat.name : '',
-                          publicName: '',
-                          displayName: chat.name || chat.formattedTitle || `+${phone}`,
-                          isSaved: Boolean(chat.name && chat.name !== phone && !chat.name.startsWith('+')),
-                          isBusiness: false,
-                          about: '',
-                          groupName: '',
-                          groupRole: '',
-                          labels: []
-                        });
+                        const existing = contactsMap.get(phone);
+                        if (chat.name && !existing.savedName && chat.name !== phone && !chat.name.startsWith('+')) {
+                          existing.savedName = chat.name;
+                          existing.displayName = chat.name;
+                          existing.isSaved = true;
+                        }
+                        if (chatLabels.length > 0) {
+                          existing.labels = Array.from(new Set([...(existing.labels || []), ...chatLabels]));
+                        }
                       }
                     }
                   }
 
-                  // Check all possible label fields on chat
-                  const rawLabels = chat.labels || chat.labelIds || chat.labelList || (chat.label !== undefined ? [chat.label] : []);
-                  if (Array.isArray(rawLabels) && rawLabels.length > 0) {
-                    rawLabels.forEach(lbl => {
-                      const lId = String(typeof lbl === 'object' ? (lbl.id || lbl.name || lbl.labelId) : lbl);
-                      if (lId) {
-                        if (!labelAssociations.has(lId)) labelAssociations.set(lId, new Set());
-                        labelAssociations.get(lId).add(jid);
-                        const phone = cleanPhone(jid.replace(/@.*$/, ''));
-                        if (phone) labelAssociations.get(lId).add(phone);
-                      }
+                  // Record label associations from chat
+                  if (chatLabels.length > 0) {
+                    chatLabels.forEach(lbl => {
+                      const lId = String(lbl);
+                      if (!labelAssociations.has(lId)) labelAssociations.set(lId, new Set());
+                      labelAssociations.get(lId).add(jid);
+                      const phone = cleanPhone(jid.replace(/@.*$/, ''));
+                      if (phone) labelAssociations.get(lId).add(phone);
                     });
                   }
                 });
@@ -315,7 +337,8 @@
                       id: groupJid,
                       name: groupName,
                       memberCount: memberTotal,
-                      timestamp: meta.creation || 0
+                      timestamp: meta.creation || 0,
+                      labels: []
                     });
                   } else {
                     const g = groupsMap.get(groupJid);
@@ -399,14 +422,19 @@
       });
     }
 
+    // Build label ID -> readable Name dictionary
+    const labelIdToName = new Map();
+    labelsMap.forEach(lbl => {
+      labelIdToName.set(String(lbl.id), lbl.name);
+      if (lbl.name) labelIdToName.set(lbl.name, lbl.name);
+    });
+
     // Enrich contacts with human-readable label names and associations
     contactsMap.forEach(c => {
-      if (Array.isArray(c.labels) && c.labels.length > 0) {
-        c.labels = c.labels.map(lbl => {
-          const lId = String(lbl);
-          const found = labelsMap.get(lId);
-          return found ? found.name : lId;
-        });
+      if (Array.isArray(c.labels)) {
+        c.labels = c.labels.map(lbl => labelIdToName.get(String(lbl)) || String(lbl));
+      } else {
+        c.labels = [];
       }
 
       // Associate contacts matching label associations
@@ -422,7 +450,7 @@
 
         const hasMatch = jidVariants.some(j => jidsSet.has(j));
         if (hasMatch) {
-          const labelName = labelsMap.get(lId)?.name || lId;
+          const labelName = labelIdToName.get(String(lId)) || lId;
           if (!c.labels.includes(labelName)) {
             c.labels.push(labelName);
           }
@@ -430,12 +458,35 @@
       }
     });
 
-    // Update label counts accurately
+    // Enrich groups with labels
+    groupsMap.forEach(g => {
+      if (Array.isArray(g.labels)) {
+        g.labels = g.labels.map(l => labelIdToName.get(String(l)) || String(l));
+      } else {
+        g.labels = [];
+      }
+
+      for (const [lId, jidsSet] of labelAssociations.entries()) {
+        if (jidsSet.has(g.id)) {
+          const labelName = labelIdToName.get(String(lId)) || lId;
+          if (!g.labels.includes(labelName)) {
+            g.labels.push(labelName);
+          }
+        }
+      }
+    });
+
+    // Update label counts accurately across both contacts and groups
     labelsMap.forEach(label => {
       const assoc = labelAssociations.get(label.id) || new Set();
       let matchedCount = 0;
       contactsMap.forEach(c => {
         if (c.labels && (c.labels.includes(label.name) || c.labels.includes(label.id))) {
+          matchedCount++;
+        }
+      });
+      groupsMap.forEach(g => {
+        if (g.labels && (g.labels.includes(label.name) || g.labels.includes(label.id))) {
           matchedCount++;
         }
       });
