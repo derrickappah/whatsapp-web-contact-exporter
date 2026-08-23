@@ -1,6 +1,6 @@
 /**
- * WhatsApp Web Exporter - Content Script (v2.1.7)
- * Multi-Database Store Extractor with Accurate Label Associations & Chat Counts
+ * WhatsApp Web Exporter - Content Script (v2.1.8)
+ * Comprehensive Multi-Schema Extractor for Labels, Contacts & Groups
  */
 
 (function () {
@@ -349,7 +349,7 @@
               } catch (e) {}
             }
 
-            // 4. Labels Stores
+            // 4. Labels Stores (label, label-item, label-association, labeled-jid, etc.)
             const labelStores = storeNames.filter(s => s.toLowerCase().includes('label'));
             for (const lStore of labelStores) {
               try {
@@ -360,31 +360,76 @@
                   // Label definition
                   if (item.name && item.id !== undefined) {
                     const lId = String(item.id);
+                    const lCount = typeof item.count === 'number' ? item.count : (typeof item.itemCount === 'number' ? item.itemCount : (typeof item.chatCount === 'number' ? item.chatCount : 0));
                     if (!labelsMap.has(lId)) {
                       labelsMap.set(lId, {
                         id: lId,
                         name: item.name,
                         color: item.hexColor || item.color || '#00a884',
-                        count: item.count || item.itemCount || item.chatCount || 0
+                        count: lCount
                       });
                     } else {
                       const existing = labelsMap.get(lId);
                       if (item.name) existing.name = item.name;
                       if (item.hexColor || item.color) existing.color = item.hexColor || item.color;
-                      if (item.count) existing.count = Math.max(existing.count || 0, item.count);
+                      if (lCount > 0) existing.count = Math.max(existing.count || 0, lCount);
                     }
                   }
 
-                  // Label association / items
+                  // Association: item.labels array (e.g. { id: jid, labels: ["1", "2"] })
+                  const itemLabels = item.labels || item.labelIds || item.labelList;
+                  if (Array.isArray(itemLabels) && itemLabels.length > 0) {
+                    const targetJid = normalizeJid(item.id || item.jid || item.chatId || item.contactId || item.parentId);
+                    const phoneOnly = cleanPhone(targetJid.replace(/@.*$/, ''));
+                    itemLabels.forEach(lbl => {
+                      const lId = String(typeof lbl === 'object' ? (lbl.id || lbl.name || lbl.labelId) : lbl);
+                      if (lId) {
+                        if (!labelAssociations.has(lId)) labelAssociations.set(lId, new Set());
+                        if (targetJid) labelAssociations.get(lId).add(targetJid);
+                        if (phoneOnly) labelAssociations.get(lId).add(phoneOnly);
+                      }
+                    });
+                  }
+
+                  // Association: item.jids / item.jidList array (e.g. { id: labelId, jids: [...] })
+                  const jidList = item.jids || item.jidList || item.chatList || item.associations || item.items || item.itemIds;
+                  if (Array.isArray(jidList) && jidList.length > 0) {
+                    const lId = String(item.id || item.labelId || item.label || '');
+                    if (lId) {
+                      if (!labelAssociations.has(lId)) labelAssociations.set(lId, new Set());
+                      jidList.forEach(j => {
+                        const targetJid = normalizeJid(typeof j === 'object' ? (j.id || j.jid || j.parentId) : j);
+                        const phoneOnly = cleanPhone(targetJid.replace(/@.*$/, ''));
+                        if (targetJid) labelAssociations.get(lId).add(targetJid);
+                        if (phoneOnly) labelAssociations.get(lId).add(phoneOnly);
+                      });
+                    }
+                  }
+
+                  // Association: item.labelItemCollection
+                  if (Array.isArray(item.labelItemCollection) && item.labelItemCollection.length > 0) {
+                    const lId = String(item.id || item.labelId || '');
+                    if (lId) {
+                      if (!labelAssociations.has(lId)) labelAssociations.set(lId, new Set());
+                      item.labelItemCollection.forEach(entry => {
+                        const targetJid = normalizeJid(entry.parentId || entry.itemId || entry.id || entry.jid || entry.chatId);
+                        const phoneOnly = cleanPhone(targetJid.replace(/@.*$/, ''));
+                        if (targetJid) labelAssociations.get(lId).add(targetJid);
+                        if (phoneOnly) labelAssociations.get(lId).add(phoneOnly);
+                      });
+                    }
+                  }
+
+                  // Association: single labelId + parentId/itemId
                   let lId = '';
                   let targetJid = '';
 
                   if (item.labelId !== undefined) {
                     lId = String(item.labelId);
                     targetJid = normalizeJid(item.parentId || item.labeledId || item.itemId || item.chatId || item.contactId || item.jid);
-                  } else if (item.label !== undefined) {
+                  } else if (item.label !== undefined && typeof item.label !== 'object') {
                     lId = String(item.label);
-                    targetJid = normalizeJid(item.parentId || item.labeledId || item.itemId || item.chatId || item.contactId || item.jid || item.id);
+                    targetJid = normalizeJid(item.parentId || item.labeledId || item.itemId || item.chatId || item.contactId || item.jid);
                   }
 
                   if (!lId || !targetJid) {
@@ -478,19 +523,27 @@
 
     // Update label counts accurately across both contacts and groups
     labelsMap.forEach(label => {
-      const assoc = labelAssociations.get(label.id) || new Set();
+      const strId = String(label.id);
+      const assoc = new Set([
+        ...(labelAssociations.get(strId) || []),
+        ...(labelAssociations.get(Number(strId)) || []),
+        ...(labelAssociations.get(label.name) || [])
+      ]);
+
       let matchedCount = 0;
       contactsMap.forEach(c => {
-        if (c.labels && (c.labels.includes(label.name) || c.labels.includes(label.id))) {
+        if (c.labels && (c.labels.includes(label.name) || c.labels.includes(strId))) {
           matchedCount++;
         }
       });
       groupsMap.forEach(g => {
-        if (g.labels && (g.labels.includes(label.name) || g.labels.includes(label.id))) {
+        if (g.labels && (g.labels.includes(label.name) || g.labels.includes(strId))) {
           matchedCount++;
         }
       });
-      label.count = Math.max(label.count || 0, assoc.size, matchedCount);
+
+      const directAssocCount = Array.from(assoc).filter(j => j.includes('@')).length;
+      label.count = Math.max(label.count || 0, directAssocCount, matchedCount);
     });
 
     if (action === 'GET_INITIAL_DATA') {
